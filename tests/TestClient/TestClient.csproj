@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>Lykke.AntaresWalletApi.TestClient</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AntaresWalletApi.ApiClient\AntaresWalletApi.ApiClient.csproj" />
+    <ProjectReference Include="..\..\src\AntaresWalletApi.ApiContract\AntaresWalletApi.ApiContract.csproj" />
+  </ItemGroup>
+
+</Project>

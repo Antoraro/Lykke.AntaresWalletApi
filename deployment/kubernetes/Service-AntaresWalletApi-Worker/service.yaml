@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: antares-wallet-api-worker
+    environment: Development
+  name: antares-wallet-api-worker
+  namespace: lykke
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: antares-wallet-api-worker
+  sessionAffinity: None
+  type: ClusterIP

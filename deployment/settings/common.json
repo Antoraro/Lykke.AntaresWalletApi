@@ -1,0 +1,12 @@
+{
+  "SeqUrl": "http://seq.common.svc.cluster.local",
+  "Serilog": {
+    "minimumLevel": {
+      "default": "${DefaultLoggingLevel}",
+      "override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+name: Release Service
+
+on:
+  push:
+    tags: "service-*"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.100
+    - name: Build
+      run: dotnet build --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
+    - name: Test
+      run: dotnet test --no-build --configuration Release
+    - name: Publish API
+      run: dotnet publish --no-build ./src/AntaresWalletApi/AntaresWalletApi.csproj --output ./publish-api --configuration Release
+    - name: Publish worker
+      run: dotnet publish --no-build ./src/AntaresWalletApi.Worker/AntaresWalletApi.Worker.csproj --output ./publish-worker --configuration Release
+    - name: Check API dir
+      run: ls ./publish-api
+    - name: Check worker dir
+      run: ls ./publish-worker
+    - name: Publish API to Registry
+      uses: swisschain/Publish-Docker-Github-Action@master
+      with:
+        name: swisschains/lykke-antares-wallet-api
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        workdir: ./publish-api
+        # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
+        tag_names: true  
+        tag_name_skip: service-    
+    - name: Publish worker to Registry
+      uses: swisschain/Publish-Docker-Github-Action@master
+      with:
+        name: swisschains/lykke-antares-wallet-api-worker
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        workdir: ./publish-worker
+        # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
+        tag_names: true  
+        tag_name_skip: service-
+    - name: Restart service
+      uses: swisschain/kube-restart-pods@master
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+        NAMESPACE: lykke
+        POD: antares-wallet-api

@@ -1,0 +1,140 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29503.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Contract", "Contract", "{655225E4-2F4C-4D07-82FB-7B4947EF5A7A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		settings.yaml = settings.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7F3DBAA2-139B-401D-A33F-1409A9BB4DE8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntaresWalletApi", "src\AntaresWalletApi\AntaresWalletApi.csproj", "{D9AE04E2-3801-499E-8E95-6F2B2B4BFB41}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntaresWalletApi.ApiClient", "src\AntaresWalletApi.ApiClient\AntaresWalletApi.ApiClient.csproj", "{9B71FE5F-2279-411C-9920-4159E3635E36}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestClient", "tests\TestClient\TestClient.csproj", "{E68690DB-606F-49CA-9BAB-DF5B5EA2E8F0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntaresWalletApi.ApiContract", "src\AntaresWalletApi.ApiContract\AntaresWalletApi.ApiContract.csproj", "{48E5261D-8A27-4496-88F1-EF76BE4279DE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntaresWalletApiTests", "tests\AntaresWalletApiTests\AntaresWalletApiTests.csproj", "{4C51C936-D545-49A9-816A-4F2C357B56DF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntaresWalletApi.Common", "src\AntaresWalletApi.Common\AntaresWalletApi.Common.csproj", "{2BFF98C7-1714-4000-A468-DBD9C24E7B02}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntaresWalletApi.Worker", "src\AntaresWalletApi.Worker\AntaresWalletApi.Worker.csproj", "{4EFB5D11-FED0-420B-B71F-503FBE77B2BC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntaresWalletApi.MessagingContract", "src\AntaresWalletApi.MessagingContract\AntaresWalletApi.MessagingContract.csproj", "{64093FB1-0321-4BC3-8832-8B51CB1BA61A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github workflow", "Github workflow", "{54F26A6C-5B76-40E5-8E9C-2FA0551BC226}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+		.github\workflows\release-api-client.yml = .github\workflows\release-api-client.yml
+		.github\workflows\release-messaging-contract.yml = .github\workflows\release-messaging-contract.yml
+		.github\workflows\release-service.yml = .github\workflows\release-service.yml
+		.github\workflows\validate-master.yml = .github\workflows\validate-master.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{DB08FC9E-A784-4D4D-932C-DA320E3C5091}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Kubernetes", "Kubernetes", "{EE2AA4BB-1E67-4074-B371-2C84F6469A72}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Settings", "Settings", "{AD4D20EE-C574-4F47-BD41-ECE62C1B27C0}"
+	ProjectSection(SolutionItems) = preProject
+		deployment\settings\common.json = deployment\settings\common.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deployment", "Deployment", "{AD37D2C5-7CE6-41CD-9515-B65E5A46B96C}"
+	ProjectSection(SolutionItems) = preProject
+		deployment\readme.md = deployment\readme.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service-AntaresWalletApi", "Service-AntaresWalletApi", "{E892D1F5-DC4C-4D13-8B62-5D182B2A676C}"
+	ProjectSection(SolutionItems) = preProject
+		deployment\kubernetes\Service-AntaresWalletApi\deployment.yaml = deployment\kubernetes\Service-AntaresWalletApi\deployment.yaml
+		deployment\kubernetes\Service-AntaresWalletApi\service.yaml = deployment\kubernetes\Service-AntaresWalletApi\service.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service-AntaresWalletApi-Worker", "Service-AntaresWalletApi-Worker", "{C58C8AEC-FB40-42A5-9E74-98BB95045A24}"
+	ProjectSection(SolutionItems) = preProject
+		deployment\kubernetes\Service-AntaresWalletApi-Worker\deployment.yaml = deployment\kubernetes\Service-AntaresWalletApi-Worker\deployment.yaml
+		deployment\kubernetes\Service-AntaresWalletApi-Worker\service.yaml = deployment\kubernetes\Service-AntaresWalletApi-Worker\service.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "product-name", "product-name", "{1A5AA860-E0C0-4BB4-91DD-3AF1A7ED74E2}"
+	ProjectSection(SolutionItems) = preProject
+		deployment\settings\product-name\common.json = deployment\settings\product-name\common.json
+		deployment\settings\product-name\service-name.json = deployment\settings\product-name\service-name.json
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D9AE04E2-3801-499E-8E95-6F2B2B4BFB41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9AE04E2-3801-499E-8E95-6F2B2B4BFB41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9AE04E2-3801-499E-8E95-6F2B2B4BFB41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9AE04E2-3801-499E-8E95-6F2B2B4BFB41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B71FE5F-2279-411C-9920-4159E3635E36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B71FE5F-2279-411C-9920-4159E3635E36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B71FE5F-2279-411C-9920-4159E3635E36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B71FE5F-2279-411C-9920-4159E3635E36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E68690DB-606F-49CA-9BAB-DF5B5EA2E8F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E68690DB-606F-49CA-9BAB-DF5B5EA2E8F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E68690DB-606F-49CA-9BAB-DF5B5EA2E8F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E68690DB-606F-49CA-9BAB-DF5B5EA2E8F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48E5261D-8A27-4496-88F1-EF76BE4279DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48E5261D-8A27-4496-88F1-EF76BE4279DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48E5261D-8A27-4496-88F1-EF76BE4279DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48E5261D-8A27-4496-88F1-EF76BE4279DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C51C936-D545-49A9-816A-4F2C357B56DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C51C936-D545-49A9-816A-4F2C357B56DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C51C936-D545-49A9-816A-4F2C357B56DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C51C936-D545-49A9-816A-4F2C357B56DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BFF98C7-1714-4000-A468-DBD9C24E7B02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BFF98C7-1714-4000-A468-DBD9C24E7B02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BFF98C7-1714-4000-A468-DBD9C24E7B02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BFF98C7-1714-4000-A468-DBD9C24E7B02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EFB5D11-FED0-420B-B71F-503FBE77B2BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EFB5D11-FED0-420B-B71F-503FBE77B2BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EFB5D11-FED0-420B-B71F-503FBE77B2BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EFB5D11-FED0-420B-B71F-503FBE77B2BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9B71FE5F-2279-411C-9920-4159E3635E36} = {655225E4-2F4C-4D07-82FB-7B4947EF5A7A}
+		{E68690DB-606F-49CA-9BAB-DF5B5EA2E8F0} = {7F3DBAA2-139B-401D-A33F-1409A9BB4DE8}
+		{48E5261D-8A27-4496-88F1-EF76BE4279DE} = {655225E4-2F4C-4D07-82FB-7B4947EF5A7A}
+		{4C51C936-D545-49A9-816A-4F2C357B56DF} = {7F3DBAA2-139B-401D-A33F-1409A9BB4DE8}
+		{64093FB1-0321-4BC3-8832-8B51CB1BA61A} = {655225E4-2F4C-4D07-82FB-7B4947EF5A7A}
+		{54F26A6C-5B76-40E5-8E9C-2FA0551BC226} = {85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}
+		{DB08FC9E-A784-4D4D-932C-DA320E3C5091} = {85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}
+		{AD37D2C5-7CE6-41CD-9515-B65E5A46B96C} = {DB08FC9E-A784-4D4D-932C-DA320E3C5091}
+		{EE2AA4BB-1E67-4074-B371-2C84F6469A72} = {AD37D2C5-7CE6-41CD-9515-B65E5A46B96C}
+		{AD4D20EE-C574-4F47-BD41-ECE62C1B27C0} = {AD37D2C5-7CE6-41CD-9515-B65E5A46B96C}
+		{E892D1F5-DC4C-4D13-8B62-5D182B2A676C} = {EE2AA4BB-1E67-4074-B371-2C84F6469A72}
+		{C58C8AEC-FB40-42A5-9E74-98BB95045A24} = {EE2AA4BB-1E67-4074-B371-2C84F6469A72}
+		{1A5AA860-E0C0-4BB4-91DD-3AF1A7ED74E2} = {AD4D20EE-C574-4F47-BD41-ECE62C1B27C0}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {196C39E2-2F2E-46AB-BA2A-0D2E7E171B5A}
+	EndGlobalSection
+EndGlobal

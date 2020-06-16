@@ -1,0 +1,13 @@
+ElasticsearchLogs:
+  NodeUrls:
+    settings-key: ElasticSearch-NodeUrls
+    types: [JsonArray]
+  IndexPrefixName:
+    settings-key: ElasticSearch-IndexPrefixName
+Serilog:
+  minimumLevel:
+    default:
+      settings-key: AntaresWallet-Serilog-DefaultMinLevel
+    override:
+      settings-key: AntaresWallet-Serilog-Override
+      types: [Json]

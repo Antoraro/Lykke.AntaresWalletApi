@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>Swisschain.Lykke.AntaresWalletApi.MessagingContract</AssemblyName>
+    <PackageId>Swisschain.Lykke.AntaresWalletApi.MessagingContract</PackageId>
+    <RootNamespace>Swisschain.Lykke.AntaresWalletApi.MessagingContract</RootNamespace>
+    <Authors>Swisschain</Authors>
+    <Product>Lykke</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>
