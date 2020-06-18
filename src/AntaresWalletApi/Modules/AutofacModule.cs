@@ -17,7 +17,6 @@ namespace AntaresWalletApi.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterInstance(_config.Token);
             builder.Register(ctx =>
             {
                 var factory = ctx.Resolve<IHttpClientFactory>();
