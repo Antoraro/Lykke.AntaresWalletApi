@@ -1,3 +1,9 @@
+Services:
+  WalletApiv1Url:
+    settings-key: WalletApiV1Url
+Token:
+  Auth:
+    settings-key: Antares-Wallet-Token
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls

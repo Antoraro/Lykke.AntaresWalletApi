@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AntaresWalletApi.Common.Configuration;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -12,22 +13,24 @@ namespace AntaresWalletApi.GrpcServices
     public class ApiService : Swisschain.Lykke.AntaresWalletApi.ApiContract.ApiService.ApiServiceBase
     {
         private readonly ILykkeWalletAPIv1Client _walletApiV1Client;
+        private readonly TokenConfig _tokenConfig;
         private readonly IMapper _mapper;
-        private const string Auth = "Bearer 70a1d4bd5d884516a428958bb4c1c6ca48e6334df12c4438b26d722632b91b4b";
 
         public ApiService(
             ILykkeWalletAPIv1Client walletApiV1Client,
+            TokenConfig tokenConfig,
             IMapper mapper
         )
         {
             _walletApiV1Client = walletApiV1Client;
+            _tokenConfig = tokenConfig;
             _mapper = mapper;
         }
         public override async Task<AssetsDictionaryResponse> AssetsDictionary(Empty request, ServerCallContext context)
         {
-            var categoriesResponse = _walletApiV1Client.GetAssetCategoryAsync(Auth);
-            var assetsResponse = _walletApiV1Client.GetDictsAssetsAsync(Auth);
-            var baseAssets = _walletApiV1Client.GetBaseAssetListAsync(Auth);
+            var categoriesResponse = _walletApiV1Client.GetAssetCategoryAsync(_tokenConfig.Auth);
+            var assetsResponse = _walletApiV1Client.GetDictsAssetsAsync(_tokenConfig.Auth);
+            var baseAssets = _walletApiV1Client.GetBaseAssetListAsync(_tokenConfig.Auth);
 
             await Task.WhenAll(categoriesResponse, assetsResponse, baseAssets);
 
