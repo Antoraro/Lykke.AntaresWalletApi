@@ -2,5 +2,6 @@
 {
     public class AppConfig
     {
+        public ServicesConfig Services { get; set; }
     }
 }
