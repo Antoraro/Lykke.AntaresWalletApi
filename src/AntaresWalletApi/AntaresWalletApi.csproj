@@ -25,6 +25,7 @@
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="Lykke.ApiClients.V1" Version="1.0.4" />
     <PackageReference Include="Swisschain.Sdk.Server" Version="6.3.1" />
+    <PackageReference Include="MyNoSqlServer.DataReader" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>

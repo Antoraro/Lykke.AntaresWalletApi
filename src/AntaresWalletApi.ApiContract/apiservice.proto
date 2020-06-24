@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "Swisschain.Lykke.AntaresWalletApi.ApiContract";
 
@@ -8,6 +9,15 @@ package antaresWallet;
 
 service ApiService {
 	rpc AssetsDictionary (google.protobuf.Empty) returns (AssetsDictionaryResponse);
+    rpc GetPrices (PricesRequest) returns (PricesResponse);
+}
+
+message PricesRequest {
+    repeated string assetPairIds = 1;
+}
+
+message PricesResponse {
+    repeated PriceUpdate prices = 1;
 }
 
 message AssetsDictionaryResponse {
@@ -36,4 +46,11 @@ message Asset {
     bool crosschainWithdrawal = 12;
     bool isTrusted = 13;
     bool canBeBase = 14;
+}
+
+message PriceUpdate {
+    string assetPairId = 1;
+    string bid = 2;
+    string ask = 3;
+    google.protobuf.Timestamp timestamp = 4;
 }

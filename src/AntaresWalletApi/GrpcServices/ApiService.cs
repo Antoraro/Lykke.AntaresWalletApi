@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using AntaresWalletApi.Extensions;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Lykke.ApiClients.V1;
+using MyNoSqlServer.Abstractions;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 using Status = Grpc.Core.Status;
 
@@ -15,14 +17,17 @@ namespace AntaresWalletApi.GrpcServices
     public class ApiService : Swisschain.Lykke.AntaresWalletApi.ApiContract.ApiService.ApiServiceBase
     {
         private readonly ILykkeWalletAPIv1Client _walletApiV1Client;
+        private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
         private readonly IMapper _mapper;
 
         public ApiService(
             ILykkeWalletAPIv1Client walletApiV1Client,
+            IMyNoSqlServerDataReader<PriceEntity> pricesReader,
             IMapper mapper
         )
         {
             _walletApiV1Client = walletApiV1Client;
+            _pricesReader = pricesReader;
             _mapper = mapper;
         }
         public override async Task<AssetsDictionaryResponse> AssetsDictionary(Empty request, ServerCallContext context)
@@ -72,6 +77,36 @@ namespace AntaresWalletApi.GrpcServices
             }
 
             return result;
+        }
+
+        public override async Task<PricesResponse> GetPrices(PricesRequest request, ServerCallContext context)
+        {
+            var entities = _pricesReader.Get(PriceEntity.GetPk());
+
+            List<PriceUpdate> result = new List<PriceUpdate>();
+
+            if (entities.Any())
+            {
+                result = _mapper.Map<List<PriceUpdate>>(entities);
+            }
+            // else
+            // {
+            //     var marketData = await _marketDataClient.GetMarketDataAsync(new Empty());
+            //     result = _mapper.Map<List<PriceUpdate>>(marketData.Items.ToList());
+            // }
+
+            if (request.AssetPairIds.Any())
+            {
+                result = result.Where(x =>
+                        request.AssetPairIds.Contains(x.AssetPairId, StringComparer.InvariantCultureIgnoreCase))
+                    .ToList();
+            }
+
+            var response = new PricesResponse();
+
+            response.Prices.AddRange(result);
+
+            return response;
         }
     }
 }
