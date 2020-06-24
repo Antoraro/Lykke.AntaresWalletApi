@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option csharp_namespace = "Swisschain.Lykke.AntaresWalletApi.ApiContract";
+
+package antaresWallet;
+
+service ApiService {
+	rpc AssetsDictionary (google.protobuf.Empty) returns (AssetsDictionaryResponse);
+}
+
+message AssetsDictionaryResponse {
+	repeated AssetCategory categories = 1;
+	repeated Asset assets = 2;
+}
+
+message AssetCategory {
+    string id = 1;
+    string name = 2;
+    string iconUrl = 3;
+}
+
+message Asset {
+    string id = 1;
+    string name = 2;
+    string symbol = 3;
+    int32 accuracy = 4;
+    bool kycNeeded = 5;
+    string categoryId = 6;
+    bool cardDeposit = 7;
+    bool swiftDeposit = 8;
+    bool blockchainDeposit = 9;
+    bool swiftWithdrawal = 10;
+    bool forwardWithdrawal = 11;
+    bool crosschainWithdrawal = 12;
+    bool isTrusted = 13;
+    bool canBeBase = 14;
+}

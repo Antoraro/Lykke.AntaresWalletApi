@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <Protobuf Include="isalive.proto" />
+    <Protobuf Include="apiservice.proto" />
   </ItemGroup>
 
 </Project>

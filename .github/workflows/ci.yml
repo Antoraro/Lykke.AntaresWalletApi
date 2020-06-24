@@ -46,15 +46,3 @@ jobs:
         workdir: ./publish-worker
         # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
         tag_names: true
-    - name: Restart service
-      uses: swisschain/kube-restart-pods@master
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-        NAMESPACE: lykke
-        POD: antares-wallet-api
-    - name: Restart worker
-      uses: swisschain/kube-restart-pods@master
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-        NAMESPACE: lykke
-        POD: antares-wallet-api-worker

@@ -1,3 +1,6 @@
+Services:
+  WalletApiv1Url:
+    settings-key: WalletApiV1Url
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls
