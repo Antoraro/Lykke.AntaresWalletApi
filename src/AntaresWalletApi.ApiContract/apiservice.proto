@@ -10,9 +10,15 @@ package antaresWallet;
 service ApiService {
 	rpc AssetsDictionary (google.protobuf.Empty) returns (AssetsDictionaryResponse);
     rpc GetPrices (PricesRequest) returns (PricesResponse);
+
+    rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
 }
 
 message PricesRequest {
+    repeated string assetPairIds = 1;
+}
+
+message PriceUpdatesRequest {
     repeated string assetPairIds = 1;
 }
 
