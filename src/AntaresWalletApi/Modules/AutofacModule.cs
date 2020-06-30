@@ -52,6 +52,7 @@ namespace AntaresWalletApi.Modules
             ).As<IMyNoSqlServerDataReader<PriceEntity>>().SingleInstance();
 
             builder.RegisterType<StreamService<PriceUpdate>>()
+                .WithParameter(TypedParameter.From(true))
                 .As<IStreamService<PriceUpdate>>()
                 .SingleInstance();
 
