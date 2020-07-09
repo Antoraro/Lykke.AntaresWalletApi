@@ -1,6 +1,11 @@
 Services:
   WalletApiv1Url:
     settings-key: WalletApiV1Url
+:MyNoSqlServer:
+  ReaderServiceUrl:
+    settings-key: MyNoSqlServer-ReaderUrl
+  PricesTableName:
+    settings-key: MyNoSqlServer-PricesTableName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls

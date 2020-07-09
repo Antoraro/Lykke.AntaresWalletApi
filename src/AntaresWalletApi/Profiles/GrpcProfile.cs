@@ -1,6 +1,8 @@
 using System;
 using System.Globalization;
+using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using AutoMapper;
+using Google.Protobuf.WellKnownTypes;
 using Lykke.ApiClients.V1;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 
@@ -15,6 +17,11 @@ namespace AntaresWalletApi.Profiles
             CreateMap<decimal, string>().ConvertUsing(d => d.ToString(CultureInfo.InvariantCulture));
             CreateMap<double, string>().ConvertUsing(d => d.ToString(CultureInfo.InvariantCulture));
             CreateMap<string, string>().ConvertUsing(d => d ?? string.Empty);
+            CreateMap<DateTime, Timestamp>().ConvertUsing((dt, timestamp) =>
+            {
+                var date = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                return Timestamp.FromDateTime(date);
+            });
 
             CreateMap<ApiAssetCategoryModel, AssetCategory>(MemberList.Destination)
                 .ForMember(d => d.IconUrl, o => o.MapFrom(x => x.AndroidIconUrl));
@@ -23,6 +30,9 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.CardDeposit, o => o.MapFrom(x => x.VisaDeposit))
                 .ForMember(d => d.Symbol, o => o.MapFrom(x => x.Symbol ?? x.DisplayId ?? x.Id))
                 .ForMember(d => d.CanBeBase, o => o.MapFrom(x => false));
+
+            CreateMap<PriceEntity, PriceUpdate>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt));
         }
     }
 }
