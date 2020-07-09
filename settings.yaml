@@ -1,11 +1,36 @@
 Services:
   WalletApiv1Url:
     settings-key: WalletApiV1Url
-:MyNoSqlServer:
+  WalletApiv2Url:
+    settings-key: WalletApiV2Url
+  CandlesHistoryServiceUrl:
+    settings-key: CandlesHistoryServiceUrl
+  SessionServiceUrl:
+    settings-key: SessionServiceUrl
+  AssetsServiceUrl:
+    settings-key: AssetsServiceUrl
+  BalancesServiceUrl:
+    settings-key: BalancesServiceUrl
+MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl
+  WriterServiceUrl:
+    settings-key: MyNoSqlServer-WriterServiceUrl
   PricesTableName:
     settings-key: MyNoSqlServer-PricesTableName
+  CandlesTableName:
+    settings-key: MyNoSqlServer-CandlesTableName
+RabbitMq:
+  Candles:
+    ConnectionString:
+      settings-key: CandlesConnectionString
+    ExchangeName:
+      settings-key: CandlesExchangeName
+MatchingEngine:
+  Host:
+    settings-key: MatchingEngine-Host
+  Port:
+    settings-key: MatchingEngine-Port
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls

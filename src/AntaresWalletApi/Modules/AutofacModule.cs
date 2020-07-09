@@ -8,6 +8,7 @@ using AntaresWalletApi.Infrastructure.Authentication;
 using AntaresWalletApi.Services;
 using Autofac;
 using Lykke.ApiClients.V1;
+using Lykke.ApiClients.V2;
 using Lykke.Common.Log;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.Balances.Client;
@@ -39,6 +40,13 @@ namespace AntaresWalletApi.Modules
                     return new LykkeWalletAPIv1Client(factory.CreateClient(HttpClientNames.WalletApiV1));
                 })
                 .As<ILykkeWalletAPIv1Client>();
+
+            builder.Register(ctx =>
+                {
+                    var factory = ctx.Resolve<IHttpClientFactory>();
+                    return new LykkeWalletAPIv2Client(factory.CreateClient(HttpClientNames.WalletApiV2));
+                })
+                .As<ILykkeWalletAPIv2Client>();
 
             builder.RegisterClientSessionClient(
                 new SessionServiceClientSettings {ServiceUrl = _config.Services.SessionServiceUrl});

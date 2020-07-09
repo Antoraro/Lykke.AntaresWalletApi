@@ -137,6 +137,11 @@ namespace AntaresWalletApi
             {
                 client.BaseAddress = new Uri(Config.Services.WalletApiv1Url);
             });
+
+            services.AddHttpClient(HttpClientNames.WalletApiV2, client =>
+            {
+                client.BaseAddress = new Uri(Config.Services.WalletApiv2Url);
+            });
         }
     }
 }

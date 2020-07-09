@@ -4,10 +4,12 @@ using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Lykke.ApiClients.V1;
-using Lykke.Service.Balances.AutorestClient.Models;
+using Lykke.ApiClients.V2;
 using Lykke.Service.CandlesHistory.Client.Models;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 using Candle = Swisschain.Lykke.AntaresWalletApi.ApiContract.Candle;
+using ClientBalanceResponseModel = Lykke.Service.Balances.AutorestClient.Models.ClientBalanceResponseModel;
+using CountryItem = Lykke.ApiClients.V1.CountryItem;
 using UpgradeRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.UpgradeRequest;
 
 namespace AntaresWalletApi.Profiles
@@ -18,10 +20,10 @@ namespace AntaresWalletApi.Profiles
         {
             CreateMap<DateTime, string>().ConvertUsing(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
             CreateMap<DateTime?, string>().ConvertUsing(dt => dt.HasValue ? dt.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") : string.Empty);
-            CreateMap<decimal, string>().ConvertUsing(d => d.ToString(CultureInfo.InvariantCulture));
-            CreateMap<decimal?, string>().ConvertUsing(d => d.HasValue ? d.Value.ToString(CultureInfo.InvariantCulture) : string.Empty);
-            CreateMap<double, string>().ConvertUsing(d => d.ToString(CultureInfo.InvariantCulture));
-            CreateMap<double?, string>().ConvertUsing(d => d.HasValue ? d.Value.ToString(CultureInfo.InvariantCulture) : string.Empty);
+            CreateMap<decimal, string>().ConvertUsing(d => d.ToString("0." + new string('#', 339), CultureInfo.InvariantCulture));
+            CreateMap<decimal?, string>().ConvertUsing(d => d.HasValue ? d.Value.ToString("0." + new string('#', 339), CultureInfo.InvariantCulture) : string.Empty);
+            CreateMap<double, string>().ConvertUsing(d => d.ToString("0." + new string('#', 339), CultureInfo.InvariantCulture));
+            CreateMap<double?, string>().ConvertUsing(d => d.HasValue ? d.Value.ToString("0." + new string('#', 339), CultureInfo.InvariantCulture) : string.Empty);
             CreateMap<string, string>().ConvertUsing(d => d ?? string.Empty);
             CreateMap<string, double>().ConvertUsing(d => double.Parse(d, NumberStyles.Any, CultureInfo.InvariantCulture));
             CreateMap<DateTime, Timestamp>().ConvertUsing((dt, timestamp) =>
@@ -92,6 +94,14 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.FailUrl, o => o.Ignore());
 
             CreateMap<CountryItem, Country>();
+            CreateMap<EthereumAssetResponse, EthereumSettingsResponse.Types.EthereumSettings>();
+            CreateMap<BitcoinFeeSettings, EthereumSettingsResponse.Types.BitcoinFee>();
+            CreateMap<CryptoDepositAddressRespModel, CryptoDepositAddressResponse.Types.CryptoDepositAddress>();
+
+            CreateMap<DepositAddressModel, GenerateWalletResponse.Types.WalletAddress>();
+            CreateMap<BcnAddressExtensionModel, GenerateWalletResponse.Types.BcnAddressExtension>();
+
+            CreateMap<WithdrawalCryptoInfoModel, WithdrawalCryptoInfoResponse.Types.WithdrawalCryptoInfo>();
         }
     }
 }

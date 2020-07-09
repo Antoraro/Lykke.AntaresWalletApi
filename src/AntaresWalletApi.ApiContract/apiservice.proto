@@ -13,25 +13,50 @@ service ApiService {
     rpc GetCandles (CandlesRequest) returns (CandlesResponse);
     rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
 
+    // GET /api/offchain/limit/list
     rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);
+    // POST /api/HotWallet/limitOrder
     rpc PlaceLimitOrder (LimitOrderRequest) returns (PlaceOrderResponse);
+    // POST /api/HotWallet/marketOrder
     rpc PlaceMarketOrder (MarketOrderRequest) returns (PlaceOrderResponse);
     rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
     rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
 
+    // GET /api/WatchLists
     rpc GetWatchlists(google.protobuf.Empty) returns (WatchlistsResponse);
+    // GET /api/WatchLists/{id}
     rpc GetWatchlist(WatchlistRequest) returns (WatchlistResponse);
+    // POST /api/WatchLists
     rpc AddWatchlist(AddWatchlistRequest) returns (WatchlistResponse);
+    // PUT /api/WatchLists
     rpc UpdateWatchlist(UpdateWatchlistRequest) returns (WatchlistResponse);
+    // DELETE /api/WatchLists
     rpc DeleteWatchlist(DeleteWatchlistRequest) returns (DeleteWatchlistResponse);
 
+    // GET /api/Tiers/Info
     rpc GetTierInfo(google.protobuf.Empty) returns (TierInfoRespone);
+    // GET /api/Wallets
     rpc GetWallets(google.protobuf.Empty) returns (WalletsResponse);
+    // POST /api/Wallets
+    rpc GenerateWallet(GenerateWalletRequest) returns (GenerateWalletResponse);
+    // POST (v2) t/api/Deposits/crypto/{assetId}/address
+    rpc GenerateWalletV2(GenerateWalletV2Request) returns (EmptyResponseV2);
+    // GET /api/SwiftCredentials/{assetId}
     rpc GetSwiftCredentials(SwiftCredentialsRequest) returns (SwiftCredentialsResponse);
+    // POST /api/BankTransferRequest
     rpc SendBankTransferRequest(BankTransferRequest) returns (EmptyResponse);
+    // GET /api/CountryPhoneCodes
     rpc GetCountryPhoneCodes(google.protobuf.Empty) returns (CountryPhoneCodesResponse);
+    // GET /api/BankCardPaymentUrlFormValues
     rpc GetBankCardPaymentDetails(google.protobuf.Empty) returns (BankCardPaymentDetailsResponse);
+    // POST /api/BankCardPaymentUrl
     rpc GetBankCardPaymentUrl(BankCardPaymentUrlRequest) returns (BankCardPaymentUrlResponse);
+    // GET /api/Ethereum/settings
+    rpc GetEthereumSettings(google.protobuf.Empty) returns (EthereumSettingsResponse);
+    // GET (v2) /api/Deposits/crypto/{assetId}/address
+    rpc GetCryptoDepositAddress(CryptoDepositAddressRequest) returns (CryptoDepositAddressResponse);
+    // GET (v2) /api/withdrawals/crypto/{assetId}/info
+    rpc GetWithdrawalCryptoInfo(WithdrawalCryptoInfoRequest) returns (WithdrawalCryptoInfoResponse);
 
     rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
     rpc GetCandleUpdates (CandleUpdatesRequest) returns (stream CandleUpdate);
@@ -101,6 +126,21 @@ message DeleteWatchlistRequest {
     string id = 1;
 }
 
+message GenerateWalletRequest {
+    string assetId = 1;
+    BcnWalletRequest bcnWallet = 2;
+
+    message BcnWalletRequest {
+        string address = 1;
+        string encodedKey = 2;
+        string publicKey = 3;
+    }
+}
+
+message GenerateWalletV2Request {
+    string assetId = 1;
+}
+
 message SwiftCredentialsRequest {
     string assetId = 1;
 }
@@ -122,6 +162,14 @@ message BankCardPaymentUrlRequest {
     string phone = 9;
     string zip = 10;
     string depositOption = 11;
+}
+
+message CryptoDepositAddressRequest {
+    string assetId = 1;
+}
+
+message WithdrawalCryptoInfoRequest {
+    string assetId = 1;
 }
 
 message CandleUpdatesRequest {
@@ -277,6 +325,24 @@ message WalletsResponse {
     }
 }
 
+message GenerateWalletResponse {
+    WalletAddress result = 1;
+    ErrorV1 error = 2;
+
+    message WalletAddress {
+        string address = 1;
+        BcnAddressExtension addressExtension = 2;
+    }
+
+    message BcnAddressExtension {
+        string addressExtensionDisplayName = 1;
+        string baseAddressDisplayName = 2;
+        string depositAddressExtension = 3;
+        string typeForDeposit = 4;
+        string typeForWithdrawal = 5;
+    }
+}
+
 message SwiftCredentialsResponse {
     SwiftCredentials result = 1;
     ErrorV1 error = 2;
@@ -333,6 +399,49 @@ message BankCardPaymentUrlResponse {
         string failUrl = 3;
         string reloadRegex = 4;
         string urlsToFormatRegex = 5;
+    }
+}
+
+message EthereumSettingsResponse {
+    EthereumSettings result = 1;
+    ErrorV1 error = 2;
+
+    message EthereumSettings {
+        int32 stepsCount = 1;
+        string ethAssetId = 2;
+        string stepGas = 3;
+        string minGas = 4;
+        string maxGas = 5;
+        string minGasPrice = 6;
+        string maxGasPrice = 7;
+        BitcoinFee bitcoin = 8;
+    }
+
+    message BitcoinFee {
+        string minFee = 1;
+        string maxFee = 2;
+    }
+}
+
+message CryptoDepositAddressResponse {
+    CryptoDepositAddress address = 1;
+    ErrorV2 error = 2;
+
+    message CryptoDepositAddress {
+        string address = 1;
+        string baseAddress = 2;
+        string addressExtension = 3;
+    }
+}
+
+message WithdrawalCryptoInfoResponse {
+    WithdrawalCryptoInfo withdrawalInfo = 1;
+    ErrorV2 error = 2;
+
+    message WithdrawalCryptoInfo {
+        string baseAddressTitle = 1;
+        bool addressExtensionMandatory = 2;
+        string addressExtensionTitle = 3;
     }
 }
 
@@ -435,15 +544,23 @@ message EmptyResponse {
     ErrorV1 error = 1;
 }
 
+message EmptyResponseV2 {
+    ErrorV2 error = 1;
+}
+
 message Error {
     string message = 1;
     map<string, string> fields = 2;
 }
-
 
 message ErrorV1 {
     string code = 1;
     string field = 2;
     string message = 3;
     string details = 4;
+}
+
+message ErrorV2 {
+    string error = 1;
+    string message = 2;
 }

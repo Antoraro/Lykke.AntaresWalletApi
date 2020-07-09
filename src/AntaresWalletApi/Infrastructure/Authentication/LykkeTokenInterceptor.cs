@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using AntaresWalletApi.Extensions;
 using Grpc.Core;
@@ -22,7 +23,7 @@ namespace AntaresWalletApi.Infrastructure.Authentication
             if (token == null)
             {
                 context.Status = new Status(StatusCode.Unauthenticated, "Invalid token");
-                return default(TResponse);
+                return Activator.CreateInstance<TResponse>();
             }
 
             var principal = await _grpcPrincipal.GetPrincipalAsync(token);
@@ -30,7 +31,7 @@ namespace AntaresWalletApi.Infrastructure.Authentication
             if (principal == null)
             {
                 context.Status = new Status(StatusCode.Unauthenticated, "Invalid token");
-                return default(TResponse);
+                return Activator.CreateInstance<TResponse>();
             }
 
             context.UserState.Add(UserStateProperties.ClientId, principal.GetClientId());

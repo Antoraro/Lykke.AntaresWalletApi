@@ -13,6 +13,7 @@ using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Lykke.ApiClients.V1;
+using Lykke.ApiClients.V2;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Models.Api;
 using Lykke.Service.Assets.Client;
@@ -22,8 +23,12 @@ using Lykke.Service.CandlesHistory.Client.Models;
 using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
+using ApiExceptionV1 = Lykke.ApiClients.V1.ApiException;
+using ApiExceptionV2 = Lykke.ApiClients.V2.ApiException;
 using Candle = Swisschain.Lykke.AntaresWalletApi.ApiContract.Candle;
 using LimitOrderModel = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderModel;
+using LimitOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderRequest;
+using MarketOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.MarketOrderRequest;
 using Status = Grpc.Core.Status;
 using UpgradeRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.UpgradeRequest;
 
@@ -32,6 +37,7 @@ namespace AntaresWalletApi.GrpcServices
     public class ApiService : Swisschain.Lykke.AntaresWalletApi.ApiContract.ApiService.ApiServiceBase
     {
         private readonly ILykkeWalletAPIv1Client _walletApiV1Client;
+        private readonly ILykkeWalletAPIv2Client _walletApiV2Client;
         private readonly IAssetsService _assetsService;
         private readonly AssetsHelper _assetsHelper;
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
@@ -46,6 +52,7 @@ namespace AntaresWalletApi.GrpcServices
 
         public ApiService(
             ILykkeWalletAPIv1Client walletApiV1Client,
+            ILykkeWalletAPIv2Client walletApiV2Client,
             IAssetsService assetsService,
             AssetsHelper assetsHelper,
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
@@ -60,6 +67,7 @@ namespace AntaresWalletApi.GrpcServices
         )
         {
             _walletApiV1Client = walletApiV1Client;
+            _walletApiV2Client = walletApiV2Client;
             _assetsService = assetsService;
             _assetsHelper = assetsHelper;
             _pricesReader = pricesReader;
@@ -163,7 +171,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -190,7 +198,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return _mapper.Map<PlaceOrderResponse>(response);
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -216,7 +224,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return _mapper.Map<PlaceOrderResponse>(response);
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -347,7 +355,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -378,7 +386,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -415,7 +423,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -453,7 +461,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -478,7 +486,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -514,7 +522,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -551,10 +559,81 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<GenerateWalletResponse> GenerateWallet(GenerateWalletRequest request, ServerCallContext context)
+        {
+            var result = new GenerateWalletResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.WalletsGenerateWalletAsync(
+                    new SubmitKeysModel
+                    {
+                        AssetId = request.AssetId,
+                        BcnWallet = request.BcnWallet != null ? new BcnWallet
+                        {
+                            Address = request.BcnWallet.Address,
+                            EncodedKey = request.BcnWallet.EncodedKey,
+                            PublicKey = request.BcnWallet.PublicKey
+                        } : null
+                    }, token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<GenerateWalletResponse.Types.WalletAddress>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<GenerateWalletResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<EmptyResponseV2> GenerateWalletV2(GenerateWalletV2Request request, ServerCallContext context)
+        {
+            var result = new EmptyResponseV2();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                await _walletApiV2Client.PostCryptosDepositAddressesAsync(request.AssetId, token);
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
 
                 throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
             }
@@ -581,7 +660,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -617,7 +696,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -655,7 +734,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -691,7 +770,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -727,7 +806,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 return result;
             }
-            catch (ApiException ex)
+            catch (ApiExceptionV1 ex)
             {
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
@@ -735,6 +814,104 @@ namespace AntaresWalletApi.GrpcServices
                 if (ex.StatusCode == 500)
                 {
                     result = JsonConvert.DeserializeObject<BankCardPaymentUrlResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<EthereumSettingsResponse> GetEthereumSettings(Empty request, ServerCallContext context)
+        {
+            var result = new EthereumSettingsResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.GetEthereumPrivateWalletSettingsAsync(token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<EthereumSettingsResponse.Types.EthereumSettings>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<EthereumSettingsResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<CryptoDepositAddressResponse> GetCryptoDepositAddress(CryptoDepositAddressRequest request, ServerCallContext context)
+        {
+            var result = new CryptoDepositAddressResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV2Client.GetCryptosDepositAddressesAsync(request.AssetId, token);
+
+                if (response != null)
+                {
+                    result.Address = _mapper.Map<CryptoDepositAddressResponse.Types.CryptoDepositAddress>(response);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<WithdrawalCryptoInfoResponse> GetWithdrawalCryptoInfo(WithdrawalCryptoInfoRequest request, ServerCallContext context)
+        {
+            var result = new WithdrawalCryptoInfoResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV2Client.GetAssetInfoAsync(request.AssetId, token);
+
+                if (response != null)
+                {
+                    result.WithdrawalInfo = _mapper.Map<WithdrawalCryptoInfoResponse.Types.WithdrawalCryptoInfo>(response);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
                     return result;
                 }
 
