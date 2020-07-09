@@ -13,19 +13,25 @@ namespace AntaresWalletApi.Services
     {
         private readonly MyNoSqlTcpClient _noSqlTcpClient;
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
+        private readonly IMyNoSqlServerDataReader<CandleEntity> _candlesReader;
         private readonly IStreamService<PriceUpdate> _priceStream;
+        private readonly IStreamService<CandleUpdate> _candlesStream;
         private readonly IMapper _mapper;
 
         public ApplicationManager(
             MyNoSqlTcpClient noSqlTcpClient,
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
+            IMyNoSqlServerDataReader<CandleEntity> candlesReader,
             IStreamService<PriceUpdate> priceStream,
+            IStreamService<CandleUpdate> candlesStream,
             IMapper mapper
             )
         {
             _noSqlTcpClient = noSqlTcpClient;
             _pricesReader = pricesReader;
+            _candlesReader = candlesReader;
             _priceStream = priceStream;
+            _candlesStream = candlesStream;
             _mapper = mapper;
         }
 
@@ -36,6 +42,15 @@ namespace AntaresWalletApi.Services
                 foreach (var price in prices)
                 {
                     _priceStream.WriteToStream(_mapper.Map<PriceUpdate>(price), price.AssetPairId);
+                }
+            });
+
+            _candlesReader.SubscribeToChanges(candles =>
+            {
+                foreach (var candle in candles)
+                {
+                    var key = $"{candle.AssetPairId}_{candle.PriceType}_{candle.TimeInterval}";
+                    _candlesStream.WriteToStream(_mapper.Map<CandleUpdate>(candle), key);
                 }
             });
 

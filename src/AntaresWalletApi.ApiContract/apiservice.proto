@@ -10,8 +10,31 @@ package antaresWallet;
 service ApiService {
 	rpc AssetsDictionary (google.protobuf.Empty) returns (AssetsDictionaryResponse);
     rpc GetPrices (PricesRequest) returns (PricesResponse);
+    rpc GetCandles (CandlesRequest) returns (CandlesResponse);
+    rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
+
+    rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);
+    rpc PlaceLimitOrder (LimitOrderRequest) returns (PlaceOrderResponse);
+    rpc PlaceMarketOrder (MarketOrderRequest) returns (PlaceOrderResponse);
+    rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
+    rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
+
+    rpc GetWatchlists(google.protobuf.Empty) returns (WatchlistsResponse);
+    rpc GetWatchlist(WatchlistRequest) returns (WatchlistResponse);
+    rpc AddWatchlist(AddWatchlistRequest) returns (WatchlistResponse);
+    rpc UpdateWatchlist(UpdateWatchlistRequest) returns (WatchlistResponse);
+    rpc DeleteWatchlist(DeleteWatchlistRequest) returns (DeleteWatchlistResponse);
+
+    rpc GetTierInfo(google.protobuf.Empty) returns (TierInfoRespone);
+    rpc GetWallets(google.protobuf.Empty) returns (WalletsResponse);
+    rpc GetSwiftCredentials(SwiftCredentialsRequest) returns (SwiftCredentialsResponse);
+    rpc SendBankTransferRequest(BankTransferRequest) returns (EmptyResponse);
+    rpc GetCountryPhoneCodes(google.protobuf.Empty) returns (CountryPhoneCodesResponse);
+    rpc GetBankCardPaymentDetails(google.protobuf.Empty) returns (BankCardPaymentDetailsResponse);
+    rpc GetBankCardPaymentUrl(BankCardPaymentUrlRequest) returns (BankCardPaymentUrlResponse);
 
     rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
+    rpc GetCandleUpdates (CandleUpdatesRequest) returns (stream CandleUpdate);
 }
 
 message PricesRequest {
@@ -21,6 +44,116 @@ message PricesRequest {
 message PriceUpdatesRequest {
     repeated string assetPairIds = 1;
 }
+message CandlesRequest {
+    string assetPairId = 1;
+    CandleType type = 2;
+    CandleInterval interval = 3;
+    google.protobuf.Timestamp from = 4;
+    google.protobuf.Timestamp to = 5;
+}
+
+message LimitOrdersRequest {
+    oneof optional_assetPairId {
+        string assetPairId = 1;
+    }
+}
+
+message LimitOrderRequest {
+    string assetPairId = 1;
+    string assetId = 2;
+    double volume = 3;
+    double price = 4;
+}
+
+message MarketOrderRequest {
+    string assetPairId = 1;
+    string assetId= 2;
+    double volume = 3;
+}
+
+message CancelOrdersRequest {
+    string assetPairId = 1;
+    Side side = 2;
+}
+
+message CancelOrderRequest {
+    string orderId = 1;
+}
+
+message WatchlistRequest {
+    string id = 1;
+}
+
+message AddWatchlistRequest {
+    string name = 1;
+    int32 order = 2;
+    repeated string assetIds = 3;
+}
+
+message UpdateWatchlistRequest {
+    string id = 1;
+    string name = 2;
+    int32 order = 3;
+    repeated string assetIds = 4;
+}
+
+message DeleteWatchlistRequest {
+    string id = 1;
+}
+
+message SwiftCredentialsRequest {
+    string assetId = 1;
+}
+
+message BankTransferRequest {
+    string assetId = 1;
+    double balanceChange = 2;
+}
+
+message BankCardPaymentUrlRequest {
+    string address = 1;
+    string amount = 2;
+    string assetId = 3;
+    string city = 4;
+    string country = 5;
+    string email = 6;
+    string firstName = 7;
+    string lastName = 8;
+    string phone = 9;
+    string zip = 10;
+    string depositOption = 11;
+}
+
+message CandleUpdatesRequest {
+    string assetPairId = 1;
+    CandleType type = 2;
+    CandleInterval interval = 3;
+}
+
+enum Side {
+    buy = 0;
+    sell = 1;
+}
+
+enum CandleType {
+    Bid = 0;
+    Ask = 1;
+    Mid = 2;
+    Trades = 3;
+}
+
+enum CandleInterval {
+    Min5 = 0;
+    Min15 = 1;
+    Min30 = 2;
+    Hour = 3;
+    Hour4 = 4;
+    Hour6 = 5;
+    Hour12 = 6;
+    Day = 7;
+    Week = 8;
+    Month = 9;
+}
 
 message PricesResponse {
     repeated PriceUpdate prices = 1;
@@ -29,6 +162,198 @@ message PricesResponse {
 message AssetsDictionaryResponse {
 	repeated AssetCategory categories = 1;
 	repeated Asset assets = 2;
+}
+
+message CandlesResponse {
+    repeated Candle candles = 1;
+}
+
+message BalancesResponse {
+    repeated Balance payload = 1;
+    Error error = 2;
+}
+
+message LimitOrdersResponse {
+    OrdersPayload result = 1;
+    ErrorV1 error = 2;
+
+    message OrdersPayload {
+        repeated LimitOrderModel orders = 1;
+    }
+}
+
+message PlaceOrderResponse {
+    OrderPayload result = 1;
+    ErrorV1 error = 2;
+
+    message OrderPayload {
+        OrderModel order = 1;
+    }
+}
+
+message OrderModel {
+    string id = 1;
+    string dateTime = 2;
+    string orderType = 3;
+    string volume = 4;
+    string price = 5;
+    string asset = 6;
+    string assetPair = 7;
+    string totalCost = 8;
+}
+
+message LimitOrderModel {
+    string id = 1;
+    string dateTime = 2;
+    string orderType = 3;
+    string volume = 4;
+    string price = 5;
+    string asset = 6;
+    string assetPair = 7;
+    string totalCost = 8;
+    string remainingVolume = 9;
+    string remainingOtherVolume = 10;
+}
+
+message CancelOrderResponse {
+    bool payload = 1;
+    Error error = 2;
+}
+
+message WatchlistsResponse {
+    repeated Watchlist result = 1;
+    ErrorV1 error = 2;
+}
+
+message WatchlistResponse {
+    Watchlist result = 1;
+    ErrorV1 error = 2;
+}
+
+message DeleteWatchlistResponse {
+    ErrorV1 error = 1;
+}
+
+message TierInfoRespone {
+    TierInfoPayload result = 1;
+    ErrorV1 error = 2;
+}
+
+message TierInfoPayload {
+    CurrentTier currentTier = 1;
+    NextTier nextTier = 2;
+    UpgradeRequest upgradeRequest = 3;
+    bool questionnaireAnswered = 4;
+}
+
+message WalletsResponse {
+    GetWalletsPayload result = 1;
+    ErrorV1 error = 2;
+
+    message GetWalletsPayload {
+        LykkeWalletsPayload lykke = 1;
+        string multiSig = 2;
+        string coloredMultiSig = 3;
+        string solarCoinAddress = 4;
+    }
+
+    message LykkeWalletsPayload {
+        repeated WalletAsset assets = 1;
+        string equity = 2;
+    }
+
+    message WalletAsset {
+        string id = 1;
+        string name = 2;
+        string balance = 3;
+        string symbol = 4;
+        string assetPairId = 5;
+        bool hideIfZero = 6;
+        string issuerId = 7;
+        int32 accuracy = 8;
+        string categoryId = 9;
+        string amountInBase = 10;
+        string reserved = 11;
+    }
+}
+
+message SwiftCredentialsResponse {
+    SwiftCredentials result = 1;
+    ErrorV1 error = 2;
+
+    message SwiftCredentials {
+        string bic = 1;
+        string accountNumber = 2;
+        string accountName = 3;
+        string purposeOfPayment = 4;
+        string bankAddress = 5;
+        string companyAddress = 6;
+        string correspondentAccount = 7;
+    }
+}
+
+message CountryPhoneCodesResponse {
+    CountryPhoneCodes result = 1;
+    ErrorV1 error = 2;
+
+    message CountryPhoneCodes {
+        string current = 1;
+        repeated Country countriesList = 2;
+    }
+}
+
+message BankCardPaymentDetailsResponse {
+    BankCardPaymentDetails result = 1;
+    ErrorV1 error = 2;
+    message BankCardPaymentDetails {
+        double amount = 1;
+        string assetId = 2;
+        string walletId = 3;
+        string firstName = 4;
+        string lastName = 5;
+        string city = 6;
+        string zip = 7;
+        string address = 8;
+        string country = 9;
+        string email = 10;
+        string phone = 11;
+        string depositOption = 12;
+        string okUrl = 13;
+        string failUrl = 14;
+    }
+}
+
+message BankCardPaymentUrlResponse {
+    BankCardPaymentUrl result = 1;
+    ErrorV1 error = 2;
+
+    message BankCardPaymentUrl {
+        string url = 1;
+        string okUrl = 2;
+        string failUrl = 3;
+        string reloadRegex = 4;
+        string urlsToFormatRegex = 5;
+    }
+}
+
+message CurrentTier {
+    string tier = 1;
+    string asset = 2;
+    string current = 3;
+    string maxLimit = 4;
+}
+
+message NextTier {
+    string tier = 1;
+    string maxLimit = 2;
+    repeated string documents = 3;
+}
+
+message UpgradeRequest {
+    string tier = 1;
+    string submitDate = 2;
+    string status = 3;
+    string limit = 4;
 }
 
 message AssetCategory {
@@ -59,4 +384,66 @@ message PriceUpdate {
     string bid = 2;
     string ask = 3;
     google.protobuf.Timestamp timestamp = 4;
+}
+
+message Candle {
+    string open = 1;
+    string close = 2;
+    string high = 3;
+    string low = 4;
+    string volume = 5;
+    string oppositeVolume = 6;
+    string lastPrice = 7;
+    google.protobuf.Timestamp timestamp = 8;
+}
+
+message CandleUpdate {
+    string open = 1;
+    string close = 2;
+    string high = 3;
+    string low = 4;
+    string volume = 5;
+    string oppositeVolume = 6;
+    string lastPrice = 7;
+    google.protobuf.Timestamp timestamp = 8;
+    google.protobuf.Timestamp updateTimestamp = 9;
+}
+
+message Balance {
+    string assetId = 1;
+    string available = 2;
+    string reserved = 3;
+    google.protobuf.Timestamp timestamp = 4;
+}
+
+message Watchlist {
+    string id = 1;
+    string name = 2;
+    int32 order = 3;
+    bool readonly = 5;
+    repeated string assetIds = 6;
+}
+
+message Country {
+    string id = 1;
+    string iso2 = 2;
+    string name = 3;
+    string prefix = 4;
+}
+
+message EmptyResponse {
+    ErrorV1 error = 1;
+}
+
+message Error {
+    string message = 1;
+    map<string, string> fields = 2;
+}
+
+
+message ErrorV1 {
+    string code = 1;
+    string field = 2;
+    string message = 3;
+    string details = 4;
 }

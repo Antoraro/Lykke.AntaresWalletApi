@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AntaresWalletApi.Common.Configuration;
+using AntaresWalletApi.Worker.Modules;
+using Autofac;
 using Swisschain.Sdk.Server.Common;
 
 namespace AntaresWalletApi.Worker
@@ -17,6 +19,12 @@ namespace AntaresWalletApi.Worker
             base.ConfigureServicesExt(services);
 
             services.AddHttpClient();
+        }
+
+        protected override void ConfigureContainerExt(ContainerBuilder builder)
+        {
+            builder.RegisterModule(new AutofacModule(Config));
+            builder.RegisterModule(new AutoMapperModule());
         }
     }
 }

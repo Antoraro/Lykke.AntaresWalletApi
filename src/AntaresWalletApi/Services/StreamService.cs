@@ -21,7 +21,7 @@ namespace AntaresWalletApi.Services
             _checkTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(10), logFactory);
             _checkTimer.Triggered += CheckStreams;
             _checkTimer.Start();
-            
+
             if (needPing)
             {
                 _pingTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(30), logFactory);
@@ -114,7 +114,7 @@ namespace AntaresWalletApi.Services
         {
             foreach (var streamData in _streamList)
             {
-                var instance = streamData.LastSentData ?? Activator.CreateInstance<T>();
+                var instance = streamData.LastSentData;
 
                 try
                 {

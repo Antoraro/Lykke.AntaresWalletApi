@@ -1,4 +1,5 @@
 using System.Linq;
+using AntaresWalletApi.Infrastructure.Authentication;
 using Grpc.Core;
 
 namespace AntaresWalletApi.Extensions
@@ -7,7 +8,36 @@ namespace AntaresWalletApi.Extensions
     {
         public static string GetToken(this ServerCallContext context)
         {
-            return context.RequestHeaders.FirstOrDefault(x => x.Key == "authorization")?.Value;
+            var header = GetBearerToken(context);
+
+            if (string.IsNullOrEmpty(header))
+                return null;
+
+            var values = header.Split(' ');
+
+            if (values.Length != 2)
+                return null;
+
+            if (values[0] != "Bearer")
+                return null;
+
+            return values[1];
+        }
+
+        public static string GetBearerToken(this ServerCallContext context)
+        {
+            var header = context.RequestHeaders.FirstOrDefault(x => x.Key.ToLowerInvariant() == "authorization")?.Value;
+            return header;
+        }
+
+        public static string GetClientId(this ServerCallContext context)
+        {
+            return context.UserState[UserStateProperties.ClientId]?.ToString();
+        }
+
+        public static string GetParnerId(this ServerCallContext context)
+        {
+            return context.UserState[UserStateProperties.PartnerId]?.ToString();
         }
     }
 }
