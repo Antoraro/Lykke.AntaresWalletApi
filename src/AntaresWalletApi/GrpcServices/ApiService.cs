@@ -26,6 +26,7 @@ using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 using ApiExceptionV1 = Lykke.ApiClients.V1.ApiException;
 using ApiExceptionV2 = Lykke.ApiClients.V2.ApiException;
 using Candle = Swisschain.Lykke.AntaresWalletApi.ApiContract.Candle;
+using CashOutFee = Swisschain.Lykke.AntaresWalletApi.ApiContract.CashOutFee;
 using LimitOrderModel = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderModel;
 using LimitOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderRequest;
 using MarketOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.MarketOrderRequest;
@@ -95,6 +96,40 @@ namespace AntaresWalletApi.GrpcServices
             result.Assets.AddRange(_mapper.Map<List<Asset>>(assets));
 
             return result;
+        }
+
+        public override async Task<BaseAssetResponse> GetBaseAsset(Empty request, ServerCallContext context)
+        {
+            var result = new BaseAssetResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV2Client.GetBaseAssetAsync(token);
+
+                if (response != null)
+                {
+                    result.BaseAsset = new BaseAssetResponse.Types.BaseAsset
+                    {
+                        AssetId = response.BaseAssetId
+                    };
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
         }
 
         public override async Task<PricesResponse> GetPrices(PricesRequest request, ServerCallContext context)
@@ -568,6 +603,42 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        public override async Task<WalletResponse> GetWallet(WalletRequest request, ServerCallContext context)
+        {
+            var result = new WalletResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.WalletsGetByIdAsync(request.AssetId, token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<WalletResponse.Types.WalletPayload>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<WalletResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
         public override async Task<GenerateWalletResponse> GenerateWallet(GenerateWalletRequest request, ServerCallContext context)
         {
             var result = new GenerateWalletResponse();
@@ -912,6 +983,301 @@ namespace AntaresWalletApi.GrpcServices
                 if (ex.StatusCode == 400)
                 {
                     result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<SwiftCashoutInfoResponse> GetSwiftCashoutInfo(Empty request, ServerCallContext context)
+        {
+            var result = new SwiftCashoutInfoResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.OffchainGetCashoutSwiftLastDataAsync(token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<SwiftCashoutInfoResponse.Types.SwiftCashoutInfo>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<SwiftCashoutInfoResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<SwiftCashoutFeeResponse> GetSwiftCashoutFee(SwiftCashoutFeeRequest request, ServerCallContext context)
+        {
+            var result = new SwiftCashoutFeeResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.OffchainCashoutSwiftFeeAsync(request.AssetId, request.CountryCode, token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<SwiftCashoutFeeResponse.Types.SwiftCashoutFee>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<SwiftCashoutFeeResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<OffchainChannelKeyResponse> GetOffchainChannelKey(OffchainChannelKeyRequest request, ServerCallContext context)
+        {
+            var result = new OffchainChannelKeyResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.GetOffchainChannelKeyAsync(request.AssetId, token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<OffchainChannelKeyResponse.Types.OffchainChannel>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<OffchainChannelKeyResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<SwiftCashoutResponse> SwiftCashout(SwiftCashoutRequest request, ServerCallContext context)
+        {
+            var result = new SwiftCashoutResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.OffchainCashoutSwiftAsync(_mapper.Map<OffchainCashoutSwiftModel>(request), token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<SwiftCashoutResponse.Types.SwiftCashoutData>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<SwiftCashoutResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<SwiftCashoutFinalizeResponse> FinalizeSwiftCashout(SwiftCashoutFinalizeRequest request, ServerCallContext context)
+        {
+            var result = new SwiftCashoutFinalizeResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.OffchainFinalizeAsync(_mapper.Map<OffchainFinalizeModel>(request), token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<SwiftCashoutFinalizeResponse.Types.OffchainTradeRespone>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<SwiftCashoutFinalizeResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<EmptyResponse> CryptoCashout(CryptoCashoutRequest request, ServerCallContext context)
+        {
+            var result = new EmptyResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.HotWalletCashoutAsync(_mapper.Map<HotWalletCashoutOperation>(request),
+                    token, _walletApiConfig.Secret);
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<EmptyResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<AppSettingsResponse> GetAppSettings(Empty request, ServerCallContext context)
+        {
+            var result = new AppSettingsResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.GetAppSettingsAsync(token);
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<AppSettingsResponse.Types.AppSettingsData>(response.Result);
+
+                    result.Result.FeeSettings.CashOut.AddRange(
+                        _mapper.Map<CashOutFee[]>(response.Result.FeeSettings.CashOut?.ToArray() ??
+                                                  Array.Empty<Lykke.ApiClients.V1.CashOutFee>()));
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<AppSettingsResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<PrivateWalletsResponse> GetPrivateWallets(Empty request, ServerCallContext context)
+        {
+            var result = new PrivateWalletsResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.PrivateWalletGetAsync(token);
+
+                if (response.Result != null)
+                {
+                    result.Result = new PrivateWalletsResponse.Types.PrivateWalletsPayload();
+
+                    foreach (var wallet in response.Result.Wallets)
+                    {
+                        var res = _mapper.Map<PrivateWallet>(wallet);
+                        res.Balances.AddRange(_mapper.Map<List<BalanceRecord>>(wallet.Balances));
+                        result.Result.Wallets.Add(res);
+                    }
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<PrivateWalletsResponse>(ex.Response);
                     return result;
                 }
 

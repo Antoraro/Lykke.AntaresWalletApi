@@ -9,6 +9,8 @@ package antaresWallet;
 
 service ApiService {
 	rpc AssetsDictionary (google.protobuf.Empty) returns (AssetsDictionaryResponse);
+    // GET (v2) /api/assets/baseAsset
+    rpc GetBaseAsset (google.protobuf.Empty) returns (BaseAssetResponse);
     rpc GetPrices (PricesRequest) returns (PricesResponse);
     rpc GetCandles (CandlesRequest) returns (CandlesResponse);
     rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
@@ -37,6 +39,8 @@ service ApiService {
     rpc GetTierInfo(google.protobuf.Empty) returns (TierInfoRespone);
     // GET /api/Wallets
     rpc GetWallets(google.protobuf.Empty) returns (WalletsResponse);
+    // GET /api/Wallets/{assetId}
+    rpc GetWallet(WalletRequest) returns (WalletResponse);
     // POST /api/Wallets
     rpc GenerateWallet(GenerateWalletRequest) returns (GenerateWalletResponse);
     // POST (v2) t/api/Deposits/crypto/{assetId}/address
@@ -57,6 +61,25 @@ service ApiService {
     rpc GetCryptoDepositAddress(CryptoDepositAddressRequest) returns (CryptoDepositAddressResponse);
     // GET (v2) /api/withdrawals/crypto/{assetId}/info
     rpc GetWithdrawalCryptoInfo(WithdrawalCryptoInfoRequest) returns (WithdrawalCryptoInfoResponse);
+
+    // GET /api/offchain/cashout/swift
+    rpc GetSwiftCashoutInfo(google.protobuf.Empty) returns (SwiftCashoutInfoResponse);
+    // GET /api/offchain/cashout/swift/fee/{assetId}/{countryCode}
+    rpc GetSwiftCashoutFee(SwiftCashoutFeeRequest) returns (SwiftCashoutFeeResponse);
+    // GET /api/Offchain/channelkey?asset={assetId}
+    rpc GetOffchainChannelKey(OffchainChannelKeyRequest) returns (OffchainChannelKeyResponse);
+    // POST /api/offchain/cashout/swift
+    rpc SwiftCashout(SwiftCashoutRequest) returns (SwiftCashoutResponse);
+    // POST /api/Offchain/finalizetransfer
+    rpc FinalizeSwiftCashout(SwiftCashoutFinalizeRequest) returns (SwiftCashoutFinalizeResponse);
+    // POST /api/HotWallet/cashout
+    rpc CryptoCashout(CryptoCashoutRequest) returns (EmptyResponse);
+
+    // GET /api/AppSettings
+    rpc GetAppSettings(google.protobuf.Empty) returns (AppSettingsResponse);
+
+    // GET /api/PrivateWallet
+    rpc GetPrivateWallets(google.protobuf.Empty) returns (PrivateWalletsResponse);
 
     rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
     rpc GetCandleUpdates (CandleUpdatesRequest) returns (stream CandleUpdate);
@@ -126,6 +149,10 @@ message DeleteWatchlistRequest {
     string id = 1;
 }
 
+message WalletRequest {
+    string assetId = 1;
+}
+
 message GenerateWalletRequest {
     string assetId = 1;
     BcnWalletRequest bcnWallet = 2;
@@ -172,6 +199,43 @@ message WithdrawalCryptoInfoRequest {
     string assetId = 1;
 }
 
+message SwiftCashoutFeeRequest {
+    string assetId = 1;
+    string countryCode = 2;
+}
+
+message OffchainChannelKeyRequest {
+    string assetId = 1;
+}
+
+message SwiftCashoutRequest {
+    string amount = 1;
+    string asset = 2;
+    string prevTempPrivateKey = 3;
+    string bic = 4;
+    string accNumber = 5;
+    string accName = 6;
+    string accHolderAddress = 7;
+    string bankName = 8;
+    string accHolderCountry = 9;
+    string accHolderZipCode = 10;
+    string accHolderCity = 11;
+}
+
+message SwiftCashoutFinalizeRequest {
+    string transferId = 1;
+    string clientRevokePubKey = 2;
+    string clientRevokeEncryptedPrivateKey = 3;
+    string signedTransferTransaction = 4;
+}
+
+message CryptoCashoutRequest {
+    string assetId = 1;
+    string volume = 2;
+    string destinationAddress = 3;
+    string destinationAddressExtension = 4;
+}
+
 message CandleUpdatesRequest {
     string assetPairId = 1;
     CandleType type = 2;
@@ -210,6 +274,15 @@ message PricesResponse {
 message AssetsDictionaryResponse {
 	repeated AssetCategory categories = 1;
 	repeated Asset assets = 2;
+}
+
+message BaseAssetResponse {
+    BaseAsset baseAsset = 1;
+    ErrorV2 error = 2;
+
+    message BaseAsset {
+        string assetId = 1;
+    }
 }
 
 message CandlesResponse {
@@ -311,6 +384,25 @@ message WalletsResponse {
     }
 
     message WalletAsset {
+        string id = 1;
+        string name = 2;
+        string balance = 3;
+        string symbol = 4;
+        string assetPairId = 5;
+        bool hideIfZero = 6;
+        string issuerId = 7;
+        int32 accuracy = 8;
+        string categoryId = 9;
+        string amountInBase = 10;
+        string reserved = 11;
+    }
+}
+
+message WalletResponse {
+    WalletPayload result = 1;
+    ErrorV1 error = 2;
+
+    message WalletPayload {
         string id = 1;
         string name = 2;
         string balance = 3;
@@ -442,6 +534,155 @@ message WithdrawalCryptoInfoResponse {
         string baseAddressTitle = 1;
         bool addressExtensionMandatory = 2;
         string addressExtensionTitle = 3;
+    }
+}
+
+message SwiftCashoutInfoResponse {
+    SwiftCashoutInfo result = 1;
+    ErrorV1 error = 2;
+
+    message SwiftCashoutInfo {
+        string bic = 1;
+        string accNumber = 2;
+        string accName = 3;
+        string bankName = 4;
+        string accHolderAddress = 5;
+        string accHolderCity = 6;
+        string accHolderCountry = 7;
+        string accHolderZipCode = 8;
+    }
+}
+
+message OffchainChannelKeyResponse {
+    OffchainChannel result = 1;
+    ErrorV1 error = 2;
+
+    message OffchainChannel {
+        string key = 1;
+    }
+}
+
+message SwiftCashoutResponse{
+    SwiftCashoutData result = 1;
+    ErrorV1 error = 2;
+
+    message SwiftCashoutData {
+        string transferId = 1;
+        string transactionHex = 2;
+        string operationResult = 3;
+    }
+}
+
+message SwiftCashoutFinalizeResponse {
+    OffchainTradeRespone result = 1;
+    ErrorV1 error = 2;
+
+    message OffchainTradeRespone {
+        string transferId = 1;
+        string transactionHex = 2;
+        string operationResult = 3;
+        OffchainOrder order = 4;
+    }
+
+    message OffchainOrder {
+        string id = 1;
+        string dateTime = 2;
+        string orderType = 3;
+        string volume = 4;
+        string price = 5;
+        string asset = 6;
+        string assetPair = 7;
+        string totalCost = 8;
+        string remainingVolume = 9;
+        string remainingOtherVolume = 10;
+    }
+}
+
+message AppSettingsResponse {
+    AppSettingsData result = 1;
+    ErrorV1 error = 2;
+
+    message AppSettingsData {
+        int32 RateRefreshPeriod = 1;
+        ApiAsset BaseAsset = 2;
+        bool signOrder = 3;
+        string DepositUrl = 4;
+        bool DebugMode = 5;
+        ApiRefundSettings RefundSettings = 6;
+        double MarketOrderPriceDeviation = 7;
+        ApiFeeSettings FeeSettings = 8;
+    }
+
+    message ApiAsset {
+        string id = 1;
+        string name = 2;
+        int32 accuracy = 3;
+        string symbol = 4;
+        bool hideWithdraw = 5;
+        bool hideDeposit = 6;
+        bool kycNeeded = 7;
+        bool bankCardsDepositEnabled = 8;
+        bool swiftDepositEnabled = 9;
+        bool blockchainDepositEnabled = 10;
+        bool otherDepositOptionsEnabled = 11;
+        string categoryId = 12;
+    }
+
+    message ApiRefundSettings {
+        string address = 1;
+    }
+
+    message ApiFeeSettings {
+        double BankCardsFeeSizePercentage = 1;
+        repeated CashOutFee CashOut = 2;
+    }
+}
+
+message PrivateWalletsResponse {
+    PrivateWalletsPayload result = 1;
+    ErrorV1 error = 2;
+
+    message PrivateWalletsPayload {
+        repeated PrivateWallet wallets = 1;
+    }
+}
+
+message PrivateWallet {
+    string address = 1;
+    string name = 2;
+    string encodedPrivateKey = 3;
+    bool isColdStorage = 4;
+    oneof optional_Number {
+        int32 number = 5;
+    }
+    string smallIconUrl = 6;
+    string mediumIconUrl = 7;
+    string largeIconUrl = 8;
+    repeated BalanceRecord balances = 9;
+    string blockchain = 10;
+}
+
+message BalanceRecord {
+    string assetId = 1;
+    string balance = 2;
+    string baseAssetId = 3;
+    string amountInBase = 4;
+}
+
+message CashOutFee {
+    string assetId = 1;
+    double size = 2;
+    string type = 3;
+}
+
+message SwiftCashoutFeeResponse {
+    SwiftCashoutFee result = 1;
+    ErrorV1 error = 2;
+
+    message SwiftCashoutFee {
+        string size = 1;
+        string assetId = 2;
+        string country = 3;
     }
 }
 

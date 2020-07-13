@@ -102,6 +102,25 @@ namespace AntaresWalletApi.Profiles
             CreateMap<BcnAddressExtensionModel, GenerateWalletResponse.Types.BcnAddressExtension>();
 
             CreateMap<WithdrawalCryptoInfoModel, WithdrawalCryptoInfoResponse.Types.WithdrawalCryptoInfo>();
+            CreateMap<CashoutSwiftLastDataResponse, SwiftCashoutInfoResponse.Types.SwiftCashoutInfo>();
+            CreateMap<CashoutSwiftFeeResponse, SwiftCashoutFeeResponse.Types.SwiftCashoutFee>();
+            CreateMap<OffchainEncryptedKeyRespModel, OffchainChannelKeyResponse.Types.OffchainChannel>();
+            CreateMap<SwiftCashoutRequest, OffchainCashoutSwiftModel>();
+            CreateMap<OffchainTradeRespModel, SwiftCashoutResponse.Types.SwiftCashoutData>();
+            CreateMap<SwiftCashoutFinalizeRequest, OffchainFinalizeModel>();
+            CreateMap<OffchainSuccessTradeRespModel, SwiftCashoutFinalizeResponse.Types.OffchainTradeRespone>();
+            CreateMap<ApiOffchainOrder, SwiftCashoutFinalizeResponse.Types.OffchainOrder>();
+
+            CreateMap<ApiAppSettingsModel, AppSettingsResponse.Types.AppSettingsData>();
+            CreateMap<ApiAssetModel, AppSettingsResponse.Types.ApiAsset>();
+            CreateMap<ApiRefundSettings, AppSettingsResponse.Types.ApiRefundSettings>();
+            CreateMap<ApiFeeSettings, AppSettingsResponse.Types.ApiFeeSettings>();
+            CreateMap<Lykke.ApiClients.V1.CashOutFee, Swisschain.Lykke.AntaresWalletApi.ApiContract.CashOutFee>();
+            CreateMap<ApiWalletAssetModel, WalletResponse.Types.WalletPayload>();
+            CreateMap<ApiPrivateWallet, PrivateWallet>();
+            CreateMap<ApiBalanceRecord, BalanceRecord>();
+            CreateMap<CryptoCashoutRequest, HotWalletCashoutOperation>();
+
         }
     }
 }
