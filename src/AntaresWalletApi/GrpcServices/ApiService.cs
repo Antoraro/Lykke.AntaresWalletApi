@@ -136,7 +136,7 @@ namespace AntaresWalletApi.GrpcServices
         {
             var entities = _pricesReader.Get(PriceEntity.GetPk());
 
-            List<PriceUpdate> result = new List<PriceUpdate>();
+            var result = new List<PriceUpdate>();
 
             if (entities.Any())
             {
