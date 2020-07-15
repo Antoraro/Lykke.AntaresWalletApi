@@ -11,6 +11,8 @@ service ApiService {
 	rpc AssetsDictionary (google.protobuf.Empty) returns (AssetsDictionaryResponse);
     // GET (v2) /api/assets/baseAsset
     rpc GetBaseAsset (google.protobuf.Empty) returns (BaseAssetResponse);
+    // GET (v2) /api/AssetPairs
+    rpc GetAssetPairs (google.protobuf.Empty) returns (AssetPairsResponse);
     rpc GetPrices (PricesRequest) returns (PricesResponse);
     rpc GetCandles (CandlesRequest) returns (CandlesResponse);
     rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
@@ -283,6 +285,11 @@ message BaseAssetResponse {
     message BaseAsset {
         string assetId = 1;
     }
+}
+
+message AssetPairsResponse {
+    repeated AssetPair assetPairs = 1;
+    ErrorV2 error = 2;
 }
 
 message CandlesResponse {
@@ -727,6 +734,15 @@ message Asset {
     bool crosschainWithdrawal = 12;
     bool isTrusted = 13;
     bool canBeBase = 14;
+}
+
+message AssetPair {
+    string id = 1;
+    int32 accuracy = 2;
+    string baseAssetId = 3;
+    int32 invertedAccuracy = 4;
+    string name = 5;
+    string quotingAssetId = 6;
 }
 
 message PriceUpdate {

@@ -120,6 +120,7 @@ namespace AntaresWalletApi.Profiles
             CreateMap<ApiPrivateWallet, PrivateWallet>();
             CreateMap<ApiBalanceRecord, BalanceRecord>();
             CreateMap<CryptoCashoutRequest, HotWalletCashoutOperation>();
+            CreateMap<AssetPairModel, AssetPair>();
 
         }
     }
