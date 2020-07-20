@@ -147,20 +147,19 @@ message CancelOrderRequest {
 }
 
 message TradesRequest {
-    string walletId = 1;
     oneof optional_assetPairId {
-        string assetPairId = 2;
+        string assetPairId = 1;
     }
-    int32 take = 3;
-    int32 skip = 4;
+    int32 take = 2;
+    int32 skip = 3;
     oneof optional_fromDate {
-        google.protobuf.Timestamp from = 5;
+        google.protobuf.Timestamp from = 4;
     }
     oneof optional_toDate {
-        google.protobuf.Timestamp to = 6;
+        google.protobuf.Timestamp to = 5;
     }
     oneof optional_tradeType {
-        string tradeType = 7;
+        string tradeType = 6;
     }
 }
 

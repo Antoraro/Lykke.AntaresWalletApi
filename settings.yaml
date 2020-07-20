@@ -10,7 +10,9 @@ Services:
   AssetsServiceUrl:
     settings-key: AssetsServiceUrl
   BalancesServiceUrl:
-    settings-key: BalancesServiceUrl
+    settings-key: BalancesServiceUr
+  ClientAccountServiceUrl:
+    settings-key: ClientAccountServiceUrl
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl

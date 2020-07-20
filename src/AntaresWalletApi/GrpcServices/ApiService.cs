@@ -20,6 +20,8 @@ using Lykke.Service.Assets.Client;
 using Lykke.Service.Balances.Client;
 using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.CandlesHistory.Client.Models;
+using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.ClientAccount.Client.Models;
 using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
@@ -49,6 +51,7 @@ namespace AntaresWalletApi.GrpcServices
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IBalancesClient _balancesClient;
+        private readonly IClientAccountClient _clientAccountClient;
         private readonly WalletApiConfig _walletApiConfig;
         private readonly IMapper _mapper;
 
@@ -64,6 +67,7 @@ namespace AntaresWalletApi.GrpcServices
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
             IBalancesClient balancesClient,
+            IClientAccountClient clientAccountClient,
             WalletApiConfig walletApiConfig,
             IMapper mapper
         )
@@ -79,6 +83,7 @@ namespace AntaresWalletApi.GrpcServices
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
             _balancesClient = balancesClient;
+            _clientAccountClient = clientAccountClient;
             _walletApiConfig = walletApiConfig;
             _mapper = mapper;
         }
@@ -466,8 +471,12 @@ namespace AntaresWalletApi.GrpcServices
             try
             {
                 var token = context.GetBearerToken();
+                var wallets = await _clientAccountClient.Wallets.GetClientWalletsFilteredAsync(context.GetClientId(), WalletType.Trading);
+
+                var walletId = wallets.FirstOrDefault()?.Id;
+
                 var response = await _walletApiV2Client.GetTradesByWalletIdAsync(
-                    request.WalletId, request.AssetPairId, request.Take, request.Skip,
+                    walletId, request.AssetPairId, request.Take, request.Skip,
                     request.OptionalFromDateCase == TradesRequest.OptionalFromDateOneofCase.None ? (DateTimeOffset?) null : request.From.ToDateTimeOffset(),
                     request.OptionalToDateCase == TradesRequest.OptionalToDateOneofCase.None ? (DateTimeOffset?) null : request.To.ToDateTimeOffset(),
                     request.OptionalTradeTypeCase == TradesRequest.OptionalTradeTypeOneofCase.None ? null : (TradeType?)Enum.Parse(typeof(TradeType?), request.TradeType),

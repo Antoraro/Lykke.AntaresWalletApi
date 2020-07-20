@@ -13,6 +13,7 @@ using Lykke.Common.Log;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.Balances.Client;
 using Lykke.Service.CandlesHistory.Client;
+using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.Session.Client;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
@@ -108,8 +109,8 @@ namespace AntaresWalletApi.Modules
                 TimeSpan.FromMinutes(60)));
 
             builder.RegisterBalancesClient(_config.Services.BalancesServiceUrl);
-
             builder.RegisterMeClient(_config.MatchingEngine.GetIpEndPoint());
+            builder.RegisterClientAccountClient(_config.Services.ClientAccountServiceUrl);
 
             builder.RegisterType<AssetsHelper>().AsSelf().SingleInstance();
             builder.RegisterType<ValidationService>().AsSelf().SingleInstance();
