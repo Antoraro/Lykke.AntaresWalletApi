@@ -4,30 +4,63 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AntaresWalletApi.Common.Domain;
-using AntaresWalletApi.Common.Domain.Services;
 using Common;
 using Lykke.Common.Log;
 
 namespace AntaresWalletApi.Services
 {
-    public class StreamService<T>: IStreamService<T> where T : class
+    public class StreamServiceBase<T> where T : class
     {
         private readonly List<StreamData<T>> _streamList = new List<StreamData<T>>();
         private readonly TimerTrigger _checkTimer;
         private readonly TimerTrigger _pingTimer;
+        private readonly TimerTrigger _jobTimer;
 
-        public StreamService(ILogFactory logFactory, bool needPing = false)
+        public StreamServiceBase(ILogFactory logFactory, bool needPing = false, TimeSpan? jobPeriod = null)
         {
-            _checkTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(10), logFactory);
+            _checkTimer = new TimerTrigger($"StreamService<{nameof(T)}>", TimeSpan.FromSeconds(10), logFactory);
             _checkTimer.Triggered += CheckStreams;
             _checkTimer.Start();
 
+            if (jobPeriod.HasValue)
+            {
+                _jobTimer = new TimerTrigger($"StreamService<{nameof(T)}>", jobPeriod.Value, logFactory);
+                _jobTimer.Triggered += Job;
+                _jobTimer.Start();
+            }
+
             if (needPing)
             {
-                _pingTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(30), logFactory);
+                _pingTimer = new TimerTrigger($"StreamService<{nameof(T)}>", TimeSpan.FromSeconds(30), logFactory);
                 _pingTimer.Triggered += Ping;
                 _pingTimer.Start();
             }
+        }
+
+        internal virtual T ProcessDataBeforeSend(T data, StreamData<T> streamData)
+        {
+            return data;
+        }
+
+        internal virtual T ProcessPingDataBeforeSend(T data, StreamData<T> streamData)
+        {
+            return data;
+        }
+
+        internal virtual void WriteStreamData(StreamData<T> streamData, T data)
+        {
+            WriteToStream(streamData, data);
+        }
+
+        protected void WriteToStream(StreamData<T> streamData, T data)
+        {
+            streamData.Stream.WriteAsync(data)
+                .ContinueWith(t => RemoveStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        internal virtual Task ProcesJobAsync(List<StreamData<T>> streamList)
+        {
+            return Task.CompletedTask;
         }
 
         public void WriteToStream(T data, string key = null)
@@ -37,11 +70,12 @@ namespace AntaresWalletApi.Services
                 : _streamList.Where(x => x.Keys.Contains(key, StringComparer.InvariantCultureIgnoreCase) || x.Keys.Length == 0).ToArray();
 
             items = items.Where(x => !x.CancelationToken?.IsCancellationRequested ?? true).ToArray();
+
             foreach (var streamData in items)
             {
+                var processedData = ProcessDataBeforeSend(data, streamData);
                 streamData.LastSentData = streamData.KeepLastData ? data : null;
-                streamData.Stream.WriteAsync(data)
-                    .ContinueWith(t => RemoveStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
+                WriteStreamData(streamData, processedData);
             }
         }
 
@@ -75,6 +109,9 @@ namespace AntaresWalletApi.Services
 
             _pingTimer.Stop();
             _pingTimer.Dispose();
+
+            _jobTimer.Stop();
+            _jobTimer.Dispose();
         }
 
         public void Stop()
@@ -87,6 +124,7 @@ namespace AntaresWalletApi.Services
 
             _checkTimer.Stop();
             _pingTimer.Stop();
+            _jobTimer.Stop();
         }
 
         private void RemoveStream(StreamData<T> streamData)
@@ -114,38 +152,26 @@ namespace AntaresWalletApi.Services
         {
             foreach (var streamData in _streamList)
             {
-                var instance = streamData.LastSentData;
+                var instance = streamData.LastSentData ?? Activator.CreateInstance<T>();
 
                 try
                 {
-                    streamData.Stream.WriteAsync(instance)
-                        .ContinueWith(t => RemoveStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
+                    var data = ProcessPingDataBeforeSend(instance, streamData);
+                    WriteStreamData(streamData, data);
                 }
                 catch {}
             }
 
             return Task.CompletedTask;
         }
-    }
 
-    internal class StreamData<T> : StreamInfo<T> where T : class
-    {
-        public TaskCompletionSource<int> CompletionTask { get; set; }
-        public T LastSentData { get; set; }
-        public bool KeepLastData { get; set; }
-
-        public static StreamData<T> Create(StreamInfo<T> streamInfo, List<T> initData = null)
+        private Task Job(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
         {
-            return new StreamData<T>
-            {
-                CompletionTask = new TaskCompletionSource<int>(),
-                CancelationToken = streamInfo.CancelationToken,
-                Stream = streamInfo.Stream,
-                Keys = streamInfo.Keys,
-                Peer = streamInfo.Peer,
-                LastSentData = initData?.Last(),
-                KeepLastData = initData != null
-            };
+            var streams = _streamList
+                .Where(x => x.CancelationToken.HasValue && x.CancelationToken.Value.IsCancellationRequested)
+                .ToList();
+
+            return ProcesJobAsync(streams);
         }
     }
 }

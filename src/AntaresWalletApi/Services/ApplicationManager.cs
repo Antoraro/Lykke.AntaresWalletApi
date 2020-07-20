@@ -1,8 +1,9 @@
 using System;
+using System.Globalization;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
-using AntaresWalletApi.Common.Domain.Services;
 using Autofac;
 using AutoMapper;
+using Google.Protobuf.WellKnownTypes;
 using MyNoSqlServer.Abstractions;
 using MyNoSqlServer.DataReader;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
@@ -14,22 +15,25 @@ namespace AntaresWalletApi.Services
         private readonly MyNoSqlTcpClient _noSqlTcpClient;
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
         private readonly IMyNoSqlServerDataReader<CandleEntity> _candlesReader;
-        private readonly IStreamService<PriceUpdate> _priceStream;
-        private readonly IStreamService<CandleUpdate> _candlesStream;
+        private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
+        private readonly PricesStreamService _priceStream;
+        private readonly CandlesStreamService _candlesStream;
         private readonly IMapper _mapper;
 
         public ApplicationManager(
             MyNoSqlTcpClient noSqlTcpClient,
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
             IMyNoSqlServerDataReader<CandleEntity> candlesReader,
-            IStreamService<PriceUpdate> priceStream,
-            IStreamService<CandleUpdate> candlesStream,
+            IMyNoSqlServerDataReader<TickerEntity> tickersReader,
+            PricesStreamService priceStream,
+            CandlesStreamService candlesStream,
             IMapper mapper
             )
         {
             _noSqlTcpClient = noSqlTcpClient;
             _pricesReader = pricesReader;
             _candlesReader = candlesReader;
+            _tickersReader = tickersReader;
             _priceStream = priceStream;
             _candlesStream = candlesStream;
             _mapper = mapper;
@@ -51,6 +55,30 @@ namespace AntaresWalletApi.Services
                 {
                     var key = $"{candle.AssetPairId}_{candle.PriceType}_{candle.TimeInterval}";
                     _candlesStream.WriteToStream(_mapper.Map<CandleUpdate>(candle), key);
+                }
+            });
+
+            _tickersReader.SubscribeToChanges(tickers =>
+            {
+                foreach (var ticker in tickers)
+                {
+                    var priceEntity = _pricesReader.Get(PriceEntity.GetPk(), ticker.AssetPairId);
+
+                    var priceUpdate = new PriceUpdate
+                    {
+                        VolumeBase24H = ticker.VolumeBase.ToString(CultureInfo.InvariantCulture),
+                        VolumeQuote24H = ticker.VolumeQuote.ToString(CultureInfo.InvariantCulture),
+                        PriceChange24H = ticker.PriceChange.ToString(CultureInfo.InvariantCulture),
+                        Timestamp = Timestamp.FromDateTime(ticker.UpdatedDt.ToUniversalTime())
+                    };
+
+                    if (priceEntity != null)
+                    {
+                        priceUpdate.Ask = priceEntity.Ask.ToString(CultureInfo.InvariantCulture);
+                        priceUpdate.Bid = priceEntity.Bid.ToString(CultureInfo.InvariantCulture);
+                    }
+
+                    _priceStream.WriteToStream(priceUpdate, priceUpdate.AssetPairId);
                 }
             });
 

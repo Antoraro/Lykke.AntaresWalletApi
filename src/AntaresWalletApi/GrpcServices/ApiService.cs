@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using AntaresWalletApi.Common.Configuration;
 using AntaresWalletApi.Common.Domain;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
-using AntaresWalletApi.Common.Domain.Services;
 using AntaresWalletApi.Extensions;
 using AntaresWalletApi.Services;
 using AutoMapper;
@@ -45,8 +44,8 @@ namespace AntaresWalletApi.GrpcServices
         private readonly IAssetsService _assetsService;
         private readonly AssetsHelper _assetsHelper;
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
-        private readonly IStreamService<PriceUpdate> _priceStreamService;
-        private readonly IStreamService<CandleUpdate> _candlesStreamService;
+        private readonly PricesStreamService _priceStreamService;
+        private readonly CandlesStreamService _candlesStreamService;
         private readonly ICandleshistoryservice _candlesHistoryService;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
@@ -61,8 +60,8 @@ namespace AntaresWalletApi.GrpcServices
             IAssetsService assetsService,
             AssetsHelper assetsHelper,
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
-            IStreamService<PriceUpdate> priceStreamService,
-            IStreamService<CandleUpdate> candlesStreamService,
+            PricesStreamService priceStreamService,
+            CandlesStreamService candlesStreamService,
             ICandleshistoryservice candlesHistoryService,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,

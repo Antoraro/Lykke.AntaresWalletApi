@@ -3,7 +3,6 @@ using System.Net.Http;
 using AntaresWalletApi.Common;
 using AntaresWalletApi.Common.Configuration;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
-using AntaresWalletApi.Common.Domain.Services;
 using AntaresWalletApi.Infrastructure.Authentication;
 using AntaresWalletApi.Services;
 using Autofac;
@@ -18,7 +17,6 @@ using Lykke.Service.Session.Client;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
 using MyNoSqlServer.DataReader;
-using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 using Swisschain.LykkeLog.Adapter;
 using Swisschain.Sdk.Server.Common;
 
@@ -85,14 +83,22 @@ namespace AntaresWalletApi.Modules
                 .As<IMyNoSqlServerDataReader<CandleEntity>>()
                 .SingleInstance();
 
-            builder.RegisterType<StreamService<PriceUpdate>>()
-                .WithParameter(TypedParameter.From(true))
-                .As<IStreamService<PriceUpdate>>()
+            builder.Register(ctx =>
+                    new MyNoSqlReadRepository<TickerEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
+                        _config.MyNoSqlServer.TickersTableName)
+                )
+                .As<IMyNoSqlServerDataReader<TickerEntity>>()
                 .SingleInstance();
 
-            builder.RegisterType<StreamService<CandleUpdate>>()
+            builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
-                .As<IStreamService<CandleUpdate>>()
+                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(1)))
+                .AsSelf()
+                .SingleInstance();
+
+            builder.RegisterType<CandlesStreamService>()
+                .WithParameter(TypedParameter.From(true))
+                .AsSelf()
                 .SingleInstance();
 
             builder.RegisterType<ApplicationManager>()
