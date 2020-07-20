@@ -18,6 +18,8 @@ service ApiService {
     rpc GetPrices (PricesRequest) returns (PricesResponse);
     rpc GetCandles (CandlesRequest) returns (CandlesResponse);
     rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
+    // GET (v2) /api/markets
+    rpc GetMarkets (MarketsRequest) returns (MarketsResponse);
 
     // GET /api/offchain/limit/list
     rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);
@@ -108,6 +110,12 @@ message CandlesRequest {
     CandleInterval interval = 3;
     google.protobuf.Timestamp from = 4;
     google.protobuf.Timestamp to = 5;
+}
+
+message MarketsRequest {
+    oneof optional_assetPairId {
+        string assetPairId = 1;
+    }
 }
 
 message LimitOrdersRequest {
@@ -325,6 +333,22 @@ message CandlesResponse {
 message BalancesResponse {
     repeated Balance payload = 1;
     Error error = 2;
+}
+
+message MarketsResponse {
+    repeated MarketModel markets = 1;
+    ErrorV2 error = 2;
+
+    message MarketModel {
+        string assetPair = 1;
+        string volume24H = 2;
+        string priceChange24H = 3;
+        string lastPrice = 4;
+        string bid = 5;
+        string ask = 6;
+        string high = 7;
+        string low = 8;
+    }
 }
 
 message LimitOrdersResponse {

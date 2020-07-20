@@ -240,6 +240,46 @@ namespace AntaresWalletApi.GrpcServices
             return res;
         }
 
+        public override async Task<MarketsResponse> GetMarkets(MarketsRequest request, ServerCallContext context)
+        {
+            var result = new MarketsResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+
+                if (request.OptionalAssetPairIdCase == MarketsRequest.OptionalAssetPairIdOneofCase.None || string.IsNullOrEmpty(request.AssetPairId))
+                {
+                    var response = await _walletApiV2Client.GetMarketsAsync();
+                    result.Markets.AddRange(_mapper.Map<List<MarketsResponse.Types.MarketModel>>(response));
+                }
+                else
+                {
+                    var response = await _walletApiV2Client.GetMarketsByAssetPairIdAsync(request.AssetPairId);
+
+                    if (response != null)
+                    {
+                        result.Markets.Add(_mapper.Map<MarketsResponse.Types.MarketModel>(response));
+                    }
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
         public override async Task<LimitOrdersResponse> GetOrders(LimitOrdersRequest request, ServerCallContext context)
         {
             try

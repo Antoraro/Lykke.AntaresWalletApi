@@ -124,6 +124,7 @@ namespace AntaresWalletApi.Profiles
             CreateMap<AssetPairModel, AssetPair>();
 
             CreateMap<TradeResponseModel, TradesResponse.Types.TradeModel>();
+            CreateMap<MarketSlice, MarketsResponse.Types.MarketModel>();
 
         }
     }
