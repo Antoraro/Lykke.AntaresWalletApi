@@ -27,6 +27,7 @@ using ApiExceptionV1 = Lykke.ApiClients.V1.ApiException;
 using ApiExceptionV2 = Lykke.ApiClients.V2.ApiException;
 using Candle = Swisschain.Lykke.AntaresWalletApi.ApiContract.Candle;
 using CashOutFee = Swisschain.Lykke.AntaresWalletApi.ApiContract.CashOutFee;
+using Enum = System.Enum;
 using LimitOrderModel = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderModel;
 using LimitOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderRequest;
 using MarketOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.MarketOrderRequest;
@@ -416,6 +417,42 @@ namespace AntaresWalletApi.GrpcServices
                     Message = response.Message ?? response.Status.ToString()
                 }
             };
+        }
+
+        public override async Task<TradesResponse> GetTrades(TradesRequest request, ServerCallContext context)
+        {
+            var result = new TradesResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV2Client.GetTradesByWalletIdAsync(
+                    request.WalletId, request.AssetPairId, request.Take, request.Skip,
+                    request.OptionalFromDateCase == TradesRequest.OptionalFromDateOneofCase.None ? (DateTimeOffset?) null : request.From.ToDateTimeOffset(),
+                    request.OptionalToDateCase == TradesRequest.OptionalToDateOneofCase.None ? (DateTimeOffset?) null : request.To.ToDateTimeOffset(),
+                    request.OptionalTradeTypeCase == TradesRequest.OptionalTradeTypeOneofCase.None ? null : (TradeType?)Enum.Parse(typeof(TradeType?), request.TradeType),
+                    token);
+
+                if (response != null)
+                {
+                    result.Trades.AddRange(_mapper.Map<List<TradesResponse.Types.TradeModel>>(response));
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
         }
 
         public override async Task<WatchlistsResponse> GetWatchlists(Empty request, ServerCallContext context)

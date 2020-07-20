@@ -31,6 +31,7 @@ namespace AntaresWalletApi.Profiles
                 var date = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
                 return Timestamp.FromDateTime(date);
             });
+            CreateMap<DateTimeOffset, Timestamp>().ConvertUsing((dt, timestamp) => Timestamp.FromDateTime(dt.UtcDateTime));
 
             CreateMap<Lykke.Service.Assets.Client.Models.Asset, Asset>(MemberList.Destination)
                 .ForMember(d => d.CardDeposit, o => o.MapFrom(x => x.BankCardsDepositEnabled))
@@ -121,6 +122,8 @@ namespace AntaresWalletApi.Profiles
             CreateMap<ApiBalanceRecord, BalanceRecord>();
             CreateMap<CryptoCashoutRequest, HotWalletCashoutOperation>();
             CreateMap<AssetPairModel, AssetPair>();
+
+            CreateMap<TradeResponseModel, TradesResponse.Types.TradeModel>();
 
         }
     }

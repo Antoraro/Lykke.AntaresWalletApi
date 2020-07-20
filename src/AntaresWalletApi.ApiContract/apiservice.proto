@@ -27,6 +27,8 @@ service ApiService {
     rpc PlaceMarketOrder (MarketOrderRequest) returns (PlaceOrderResponse);
     rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
     rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
+    // GET (v2) /api/History/{walletId}/trades
+    rpc GetTrades (TradesRequest) returns (TradesResponse);
 
     // GET /api/WatchLists
     rpc GetWatchlists(google.protobuf.Empty) returns (WatchlistsResponse);
@@ -134,6 +136,24 @@ message CancelOrdersRequest {
 
 message CancelOrderRequest {
     string orderId = 1;
+}
+
+message TradesRequest {
+    string walletId = 1;
+    oneof optional_assetPairId {
+        string assetPairId = 2;
+    }
+    int32 take = 3;
+    int32 skip = 4;
+    oneof optional_fromDate {
+        google.protobuf.Timestamp from = 5;
+    }
+    oneof optional_toDate {
+        google.protobuf.Timestamp to = 6;
+    }
+    oneof optional_tradeType {
+        string tradeType = 7;
+    }
 }
 
 message WatchlistRequest {
@@ -352,6 +372,24 @@ message LimitOrderModel {
 message CancelOrderResponse {
     bool payload = 1;
     Error error = 2;
+}
+
+message TradesResponse {
+    repeated TradeModel trades = 1;
+    ErrorV2 error = 2;
+
+    message TradeModel {
+        string id = 1;
+        string orderId = 2;
+        string assetPairId = 3;
+        string price = 4;
+        string direction = 5;
+        string baseAssetName = 6;
+        string baseVolume = 7;
+        string quoteAssetName = 8;
+        string quoteVolume = 9;
+        google.protobuf.Timestamp timestamp = 10;
+    }
 }
 
 message WatchlistsResponse {
