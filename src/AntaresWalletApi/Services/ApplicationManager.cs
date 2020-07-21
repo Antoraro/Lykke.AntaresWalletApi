@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using Autofac;
@@ -16,8 +17,10 @@ namespace AntaresWalletApi.Services
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
         private readonly IMyNoSqlServerDataReader<CandleEntity> _candlesReader;
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
+        private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbooksReader;
         private readonly PricesStreamService _priceStream;
         private readonly CandlesStreamService _candlesStream;
+        private readonly OrderbookStreamService _orderbookStream;
         private readonly IMapper _mapper;
 
         public ApplicationManager(
@@ -25,8 +28,10 @@ namespace AntaresWalletApi.Services
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
             IMyNoSqlServerDataReader<CandleEntity> candlesReader,
             IMyNoSqlServerDataReader<TickerEntity> tickersReader,
+            IMyNoSqlServerDataReader<OrderbookEntity> orderbooksReader,
             PricesStreamService priceStream,
             CandlesStreamService candlesStream,
+            OrderbookStreamService orderbookStream,
             IMapper mapper
             )
         {
@@ -34,8 +39,10 @@ namespace AntaresWalletApi.Services
             _pricesReader = pricesReader;
             _candlesReader = candlesReader;
             _tickersReader = tickersReader;
+            _orderbooksReader = orderbooksReader;
             _priceStream = priceStream;
             _candlesStream = candlesStream;
+            _orderbookStream = orderbookStream;
             _mapper = mapper;
         }
 
@@ -80,6 +87,17 @@ namespace AntaresWalletApi.Services
                     }
 
                     _priceStream.WriteToStream(priceUpdate, priceUpdate.AssetPairId);
+                }
+            });
+
+            _orderbooksReader.SubscribeToChanges(orderbooks =>
+            {
+                foreach (var orderbook in orderbooks)
+                {
+                    var item = _mapper.Map<Orderbook>(orderbook);
+                    item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
+                    item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
+                    _orderbookStream.WriteToStream(item, orderbook.AssetPairId);
                 }
             });
 

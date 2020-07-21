@@ -70,6 +70,13 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.OppositeVolume, o => o.MapFrom(x => x.TradingOppositeVolume))
                 .ForMember(d => d.LastPrice, o => o.MapFrom(x => x.LastTradePrice));
 
+            CreateMap<OrderbookEntity, Orderbook>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
+
+            CreateMap<VolumePriceEntity, Orderbook.Types.PriceVolume>(MemberList.Destination)
+                .ForMember(d => d.V, o => o.MapFrom(x => x.Volume))
+                .ForMember(d => d.P, o => o.MapFrom(x => x.Price));
+
             CreateMap<ClientBalanceResponseModel, Balance>()
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedAt))
                 .ForMember(d => d.Available, o => o.MapFrom(x => x.Balance))
