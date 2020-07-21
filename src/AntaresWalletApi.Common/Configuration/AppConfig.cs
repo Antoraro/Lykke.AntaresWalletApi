@@ -7,5 +7,6 @@
         public RabbitMqConfig RabbitMq { get; set; }
         public MeConfig MatchingEngine { get; set; }
         public WalletApiConfig WalletApi { get; set; }
+        public RedisConfig Redis { get; set; }
     }
 }

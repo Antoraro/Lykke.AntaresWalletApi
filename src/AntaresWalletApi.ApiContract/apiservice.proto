@@ -111,6 +111,7 @@ service ApiService {
 
     rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
     rpc GetCandleUpdates (CandleUpdatesRequest) returns (stream CandleUpdate);
+    rpc GetOrderbookUpdates (OrderbookUpdatesRequest) returns (stream Orderbook);
 }
 
 message BaseAssetUpdateRequest {
@@ -336,6 +337,10 @@ message CandleUpdatesRequest {
     string assetPairId = 1;
     CandleType type = 2;
     CandleInterval interval = 3;
+}
+
+message OrderbookUpdatesRequest {
+    string assetPairId = 1;
 }
 
 enum Side {
@@ -989,6 +994,18 @@ message CandleUpdate {
     string lastPrice = 7;
     google.protobuf.Timestamp timestamp = 8;
     google.protobuf.Timestamp updateTimestamp = 9;
+}
+
+message Orderbook {
+    string assetPairId = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    repeated PriceVolume bids = 3;
+    repeated PriceVolume asks = 4;
+
+    message PriceVolume {
+        string p = 1;
+        string v = 2;
+    }
 }
 
 message Balance {

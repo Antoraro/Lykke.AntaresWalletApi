@@ -15,6 +15,8 @@ using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.RateCalculator.Client;
 using Lykke.Service.Session.Client;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Redis;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
 using MyNoSqlServer.DataReader;
@@ -91,6 +93,11 @@ namespace AntaresWalletApi.Modules
                 .As<IMyNoSqlServerDataReader<TickerEntity>>()
                 .SingleInstance();
 
+            builder.Register(ctx =>
+                new MyNoSqlReadRepository<OrderbookEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
+                    _config.MyNoSqlServer.OrderbooksTableName)
+            ).As<IMyNoSqlServerDataReader<OrderbookEntity>>().SingleInstance();
+
             builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
                 .WithParameter("jobPeriod", TimeSpan.FromSeconds(1))
@@ -98,6 +105,11 @@ namespace AntaresWalletApi.Modules
                 .SingleInstance();
 
             builder.RegisterType<CandlesStreamService>()
+                .WithParameter(TypedParameter.From(true))
+                .AsSelf()
+                .SingleInstance();
+
+            builder.RegisterType<OrderbookStreamService>()
                 .WithParameter(TypedParameter.From(true))
                 .AsSelf()
                 .SingleInstance();
@@ -123,6 +135,20 @@ namespace AntaresWalletApi.Modules
             builder.RegisterType<ValidationService>().AsSelf().SingleInstance();
             builder.RegisterInstance(_config.WalletApi);
             builder.RegisterRateCalculatorClient(_config.Services.RateCalculatorServiceUrl);
+            var cache = new RedisCache(new RedisCacheOptions
+            {
+                Configuration = _config.Redis.RedisConfiguration,
+                InstanceName = _config.Redis.InstanceName
+            });
+
+            builder.RegisterInstance(cache)
+                .As<IDistributedCache>()
+                .SingleInstance();
+
+            builder.RegisterType<OrderbooksService>()
+                .WithParameter(TypedParameter.From(_config.Redis.OrderBooksCacheKeyPattern))
+                .AsSelf()
+                .SingleInstance();
         }
     }
 }

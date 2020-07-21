@@ -51,8 +51,10 @@ namespace AntaresWalletApi.GrpcServices
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
         private readonly PricesStreamService _priceStreamService;
         private readonly CandlesStreamService _candlesStreamService;
+        private readonly OrderbookStreamService _orderbookStreamService;
         private readonly ICandleshistoryservice _candlesHistoryService;
         private readonly ValidationService _validationService;
+        private readonly OrderbooksService _orderbooksService;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IBalancesClient _balancesClient;
         private readonly IClientAccountClient _clientAccountClient;
@@ -68,8 +70,10 @@ namespace AntaresWalletApi.GrpcServices
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
             PricesStreamService priceStreamService,
             CandlesStreamService candlesStreamService,
+            OrderbookStreamService orderbookStreamService,
             ICandleshistoryservice candlesHistoryService,
             ValidationService validationService,
+            OrderbooksService orderbooksService,
             IMatchingEngineClient matchingEngineClient,
             IBalancesClient balancesClient,
             IClientAccountClient clientAccountClient,
@@ -85,8 +89,10 @@ namespace AntaresWalletApi.GrpcServices
             _pricesReader = pricesReader;
             _priceStreamService = priceStreamService;
             _candlesStreamService = candlesStreamService;
+            _orderbookStreamService = orderbookStreamService;
             _candlesHistoryService = candlesHistoryService;
             _validationService = validationService;
+            _orderbooksService = orderbooksService;
             _matchingEngineClient = matchingEngineClient;
             _balancesClient = balancesClient;
             _clientAccountClient = clientAccountClient;
@@ -1841,6 +1847,35 @@ namespace AntaresWalletApi.GrpcServices
             };
 
             return _candlesStreamService.RegisterStream(streamInfo);
+        }
+
+        public override async Task GetOrderbookUpdates(OrderbookUpdatesRequest request,
+            IServerStreamWriter<Orderbook> responseStream,
+            ServerCallContext context)
+        {
+            Console.WriteLine($"New orderbook stream connect. peer:{context.Peer}");
+
+            var data = await _orderbooksService.GetAsync(request.AssetPairId);
+
+            var orderbooks = new List<Orderbook>();
+
+            foreach (var item in data)
+            {
+                var orderbook = _mapper.Map<Orderbook>(item);
+                orderbook.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Asks));
+                orderbook.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Bids));
+                orderbooks.Add(orderbook);
+            }
+
+            var streamInfo = new StreamInfo<Orderbook>
+            {
+                Stream = responseStream,
+                CancelationToken = context.CancellationToken,
+                Keys = new [] {request.AssetPairId},
+                Peer = context.Peer
+            };
+
+            await _orderbookStreamService.RegisterStream(streamInfo, orderbooks);
         }
     }
 }
