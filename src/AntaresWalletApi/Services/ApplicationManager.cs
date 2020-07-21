@@ -66,6 +66,7 @@ namespace AntaresWalletApi.Services
 
                     var priceUpdate = new PriceUpdate
                     {
+                        AssetPairId = ticker.AssetPairId,
                         VolumeBase24H = ticker.VolumeBase.ToString(CultureInfo.InvariantCulture),
                         VolumeQuote24H = ticker.VolumeQuote.ToString(CultureInfo.InvariantCulture),
                         PriceChange24H = ticker.PriceChange.ToString(CultureInfo.InvariantCulture),

@@ -44,7 +44,10 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.IconUrl, o => o.MapFrom(x => x.AndroidIconUrl));
 
             CreateMap<PriceEntity, PriceUpdate>(MemberList.Destination)
-                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt));
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt))
+                .ForMember(d => d.VolumeBase24H, o => o.Ignore())
+                .ForMember(d => d.VolumeQuote24H, o => o.Ignore())
+                .ForMember(d => d.PriceChange24H, o => o.Ignore());
 
             CreateMap<CandlePriceType, CandleType>();
             CreateMap<CandleTimeInterval, CandleInterval>();

@@ -92,7 +92,7 @@ namespace AntaresWalletApi.Modules
 
             builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
-                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(1)))
+                .WithParameter("jobPeriod", TimeSpan.FromSeconds(1))
                 .AsSelf()
                 .SingleInstance();
 

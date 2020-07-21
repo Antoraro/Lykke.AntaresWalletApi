@@ -168,7 +168,7 @@ namespace AntaresWalletApi.Services
         private Task Job(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
         {
             var streams = _streamList
-                .Where(x => x.CancelationToken.HasValue && x.CancelationToken.Value.IsCancellationRequested)
+                .Where(x => !x.CancelationToken?.IsCancellationRequested ?? true)
                 .ToList();
 
             return ProcesJobAsync(streams);

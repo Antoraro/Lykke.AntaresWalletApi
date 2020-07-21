@@ -25,13 +25,15 @@ namespace AntaresWalletApi.Services
         {
             foreach (var stream in streamList)
             {
-                var dataToSend = _prices.Values.Where(x => stream.Keys.Contains(x.AssetPairId)).ToList();
+                var dataToSend = _prices.Values.Where(x => stream.Keys.Contains(x.AssetPairId, StringComparer.InvariantCultureIgnoreCase) || stream.Keys.Length == 0).ToList();
 
                 foreach (var data in dataToSend)
                 {
                     WriteToStream(stream, data);
                 }
             }
+
+            _prices.Clear();
 
             return Task.CompletedTask;
         }
