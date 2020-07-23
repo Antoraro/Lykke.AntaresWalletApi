@@ -331,7 +331,19 @@ namespace AntaresWalletApi.GrpcServices
                     token,
                     _walletApiConfig.Secret);
 
-                return _mapper.Map<PlaceOrderResponse>(response);
+                var result = new PlaceOrderResponse();
+
+                if (response.Result != null)
+                {
+                    result = _mapper.Map<PlaceOrderResponse>(response);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
             }
             catch (ApiExceptionV1 ex)
             {
@@ -370,42 +382,69 @@ namespace AntaresWalletApi.GrpcServices
 
         public override async Task<CancelOrderResponse> CancelAllOrders(CancelOrdersRequest request, ServerCallContext context)
         {
-            var result = await _validationService.ValidateAssetPairAsync(request.AssetPairId);
+            MeResponseModel response = null;
 
-            if (result != null)
+            if (!string.IsNullOrEmpty(request.AssetPairId))
             {
-                return new CancelOrderResponse
+                var result = await _validationService.ValidateAssetPairAsync(request.AssetPairId);
+
+                if (result != null)
                 {
-                    Error = new Error
+                    return new CancelOrderResponse
                     {
-                        Message = result.Message
-                    }
-                };
-            }
+                        Error = new Error
+                        {
+                            Message = result.Message
+                        }
+                    };
+                }
 
-            bool? isBuy;
-            switch (request.Side)
-            {
-                case Side.Buy:
-                    isBuy = true;
-                    break;
-                case Side.Sell:
-                    isBuy = false;
-                    break;
-                default:
+                bool? isBuy;
+
+                if (request.OptionalSideCase == CancelOrdersRequest.OptionalSideOneofCase.None)
+                {
                     isBuy = null;
-                    break;
+                }
+                else
+                {
+                    switch (request.Side)
+                    {
+                        case Side.Buy:
+                            isBuy = true;
+                            break;
+                        case Side.Sell:
+                            isBuy = false;
+                            break;
+                        default:
+                            isBuy = null;
+                            break;
+                    }
+                }
+
+                var model = new LimitOrderMassCancelModel
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    AssetPairId = request.AssetPairId,
+                    ClientId = context.GetClientId(),
+                    IsBuy = isBuy
+                };
+
+                response = await _matchingEngineClient.MassCancelLimitOrdersAsync(model);
             }
-
-            var model = new LimitOrderMassCancelModel
+            else
             {
-                Id = Guid.NewGuid().ToString(),
-                AssetPairId = request.AssetPairId,
-                ClientId = context.GetClientId(),
-                IsBuy = isBuy
-            };
+                var orders = await GetOrders(new LimitOrdersRequest(), context);
 
-            MeResponseModel response = await _matchingEngineClient.MassCancelLimitOrdersAsync(model);
+                if (orders.Result.Orders.Any())
+                {
+                    var orderIds = orders.Result.Orders.Select(x => x.Id).ToList();
+                    response = await _matchingEngineClient.CancelLimitOrdersAsync(orderIds);
+                }
+                else
+                {
+                    response = new MeResponseModel{Status = MeStatusCodes.Ok};
+                }
+            }
 
             if (response == null)
             {

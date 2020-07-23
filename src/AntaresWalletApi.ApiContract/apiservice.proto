@@ -139,7 +139,9 @@ message MarketOrderRequest {
 
 message CancelOrdersRequest {
     string assetPairId = 1;
-    Side side = 2;
+    oneof optional_side {
+        Side side = 2;
+    }
 }
 
 message CancelOrderRequest {

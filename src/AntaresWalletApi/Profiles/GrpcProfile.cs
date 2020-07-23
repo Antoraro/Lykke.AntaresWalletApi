@@ -74,7 +74,8 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.Reserved, o => o.MapFrom(x => x.Reserved))
                 .ForMember(d => d.AssetId, o => o.MapFrom(x => x.AssetId));
 
-            CreateMap<ErrorModel, ErrorV1>();
+            CreateMap<ErrorModel, ErrorV1>()
+                .ForMember(d => d.Details, o => o.Ignore());
 
             CreateMap<ResponseModelOfHotWalletSuccessTradeRespModel, PlaceOrderResponse>();
             CreateMap<HotWalletSuccessTradeRespModel, PlaceOrderResponse.Types.OrderPayload>();
