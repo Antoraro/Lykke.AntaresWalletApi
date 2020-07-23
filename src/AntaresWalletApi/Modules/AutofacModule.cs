@@ -13,6 +13,7 @@ using Lykke.Service.Assets.Client;
 using Lykke.Service.Balances.Client;
 using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.RateCalculator.Client;
 using Lykke.Service.Session.Client;
 using Microsoft.Extensions.Logging;
 using MyNoSqlServer.Abstractions;
@@ -121,6 +122,7 @@ namespace AntaresWalletApi.Modules
             builder.RegisterType<AssetsHelper>().AsSelf().SingleInstance();
             builder.RegisterType<ValidationService>().AsSelf().SingleInstance();
             builder.RegisterInstance(_config.WalletApi);
+            builder.RegisterRateCalculatorClient(_config.Services.RateCalculatorServiceUrl);
         }
     }
 }

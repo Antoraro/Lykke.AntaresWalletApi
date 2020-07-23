@@ -21,6 +21,7 @@ using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.CandlesHistory.Client.Models;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
+using Lykke.Service.RateCalculator.Client;
 using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
@@ -51,6 +52,7 @@ namespace AntaresWalletApi.GrpcServices
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IBalancesClient _balancesClient;
         private readonly IClientAccountClient _clientAccountClient;
+        private readonly IRateCalculatorClient _rateCalculatorClient;
         private readonly WalletApiConfig _walletApiConfig;
         private readonly IMapper _mapper;
 
@@ -67,6 +69,7 @@ namespace AntaresWalletApi.GrpcServices
             IMatchingEngineClient matchingEngineClient,
             IBalancesClient balancesClient,
             IClientAccountClient clientAccountClient,
+            IRateCalculatorClient rateCalculatorClient,
             WalletApiConfig walletApiConfig,
             IMapper mapper
         )
@@ -83,6 +86,7 @@ namespace AntaresWalletApi.GrpcServices
             _matchingEngineClient = matchingEngineClient;
             _balancesClient = balancesClient;
             _clientAccountClient = clientAccountClient;
+            _rateCalculatorClient = rateCalculatorClient;
             _walletApiConfig = walletApiConfig;
             _mapper = mapper;
         }
@@ -320,10 +324,13 @@ namespace AntaresWalletApi.GrpcServices
 
             var result = new AmountInBaseAssetResponse();
 
-            foreach (var asset in assets)
-            {
-                result.Values.Add(new AmountInBaseAssetResponse.Types.AmountInBasePayload{AssetId = asset.Id, AmountInBase = "1"});
-            }
+            var records = assets.Where(x => x.Id != request.AssetId)
+                .Select(x => new Lykke.Service.RateCalculator.Client.AutorestClient.Models.BalanceRecord(1, x.Id))
+                .ToList();
+
+            var valuesInBase = await _rateCalculatorClient.FillBaseAssetDataAsync(records, request.AssetId);
+
+            result.Values.AddRange(valuesInBase.Where(x => x.AmountInBase.HasValue && x.AmountInBase.Value > 0).Select(x => new AmountInBaseAssetResponse.Types.AmountInBasePayload{AssetId = x.AssetId, AmountInBase = x.AmountInBase.Value.ToString(CultureInfo.InvariantCulture)}));
 
             return result;
         }
