@@ -22,6 +22,7 @@ service ApiService {
     rpc GetMarkets (MarketsRequest) returns (MarketsResponse);
     // GET	/api/Client/pendingActions
     rpc GetPendingActions(google.protobuf.Empty) returns (PendingActionsResponse);
+    rpc GetAmountInBaseAsset(AmountInBaseRequest) returns (AmountInBaseAssetResponse);
 
     // GET /api/offchain/limit/list
     rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);
@@ -112,6 +113,10 @@ message CandlesRequest {
     CandleInterval interval = 3;
     google.protobuf.Timestamp from = 4;
     google.protobuf.Timestamp to = 5;
+}
+
+message AmountInBaseRequest {
+    string assetId = 1;
 }
 
 message MarketsRequest {
@@ -366,6 +371,15 @@ message PendingActionsResponse {
         bool pendingOperations = 5;
         bool ethereumPendingActions = 6;
         bool sessionConfirmation = 7;
+    }
+}
+
+message AmountInBaseAssetResponse {
+    repeated AmountInBasePayload values = 1;
+
+    message AmountInBasePayload {
+        string assetId = 1;
+        string amountInBase = 2;
     }
 }
 

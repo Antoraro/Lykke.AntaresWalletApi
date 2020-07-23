@@ -314,6 +314,20 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        public override async Task<AmountInBaseAssetResponse> GetAmountInBaseAsset(AmountInBaseRequest request, ServerCallContext context)
+        {
+            var assets = await _assetsHelper.GetAllAssetsAsync(false);
+
+            var result = new AmountInBaseAssetResponse();
+
+            foreach (var asset in assets)
+            {
+                result.Values.Add(new AmountInBaseAssetResponse.Types.AmountInBasePayload{AssetId = asset.Id, AmountInBase = "1"});
+            }
+
+            return result;
+        }
+
         public override async Task<LimitOrdersResponse> GetOrders(LimitOrdersRequest request, ServerCallContext context)
         {
             try

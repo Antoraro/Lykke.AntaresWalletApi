@@ -36,5 +36,10 @@ namespace AntaresWalletApi.Services
                     ? partnerId != null && x.PartnerIds.Contains(partnerId)
                     : partnerId == null || x.PartnerIds.Contains(partnerId)));
         }
+
+        public Task<IReadOnlyCollection<Asset>> GetAllAssetsAsync(bool includeNonTradable)
+        {
+            return _assetsServiceWithCache.GetAllAssetsAsync(includeNonTradable);
+        }
     }
 }
