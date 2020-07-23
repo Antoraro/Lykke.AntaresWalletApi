@@ -284,6 +284,36 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        public override async Task<PendingActionsResponse> GetPendingActions(Empty request, ServerCallContext context)
+        {
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.ClientGetPendingActionsAsync(token);
+
+                var result = new PendingActionsResponse();
+
+                if (response.Result != null)
+                {
+                    result.Result = _mapper.Map<PendingActionsResponse.Types.PendingActionsPayload>(response.Result);
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
         public override async Task<LimitOrdersResponse> GetOrders(LimitOrdersRequest request, ServerCallContext context)
         {
             try

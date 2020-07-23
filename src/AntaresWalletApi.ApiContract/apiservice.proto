@@ -20,6 +20,8 @@ service ApiService {
     rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
     // GET (v2) /api/markets
     rpc GetMarkets (MarketsRequest) returns (MarketsResponse);
+    // GET	/api/Client/pendingActions
+    rpc GetPendingActions(google.protobuf.Empty) returns (PendingActionsResponse);
 
     // GET /api/offchain/limit/list
     rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);
@@ -349,6 +351,21 @@ message MarketsResponse {
         string ask = 6;
         string high = 7;
         string low = 8;
+    }
+}
+
+message PendingActionsResponse {
+    PendingActionsPayload result = 1;
+    ErrorV1 error = 2;
+
+    message PendingActionsPayload {
+        bool unsignedTxs = 1;
+        bool offchainRequests = 2;
+        bool needReinit = 3;
+        bool dialogPending = 4;
+        bool pendingOperations = 5;
+        bool ethereumPendingActions = 6;
+        bool sessionConfirmation = 7;
     }
 }
 
