@@ -10,7 +10,7 @@ Services:
   AssetsServiceUrl:
     settings-key: AssetsServiceUrl
   BalancesServiceUrl:
-    settings-key: BalancesServiceUr
+    settings-key: BalancesServiceUrl
   ClientAccountServiceUrl:
     settings-key: ClientAccountServiceUrl
   RateCalculatorServiceUrl:
@@ -23,7 +23,7 @@ MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl
   WriterServiceUrl:
-    settings-key: MyNoSqlServer-WriterServiceUrl
+    settings-key: MyNoSqlServer-WriterUrl
   PricesTableName:
     settings-key: MyNoSqlServer-PricesTableName
   CandlesTableName:
