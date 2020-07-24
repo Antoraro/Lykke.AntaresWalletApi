@@ -12,6 +12,7 @@ using Autofac;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
@@ -79,6 +80,8 @@ namespace AntaresWalletApi
                 builder.AllowAnyOrigin();
             }));
 
+            services.AddMemoryCache();
+
             services.AddSingleton(Config);
 
             services
@@ -86,7 +89,10 @@ namespace AntaresWalletApi
                 {
                     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                     x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                });
+                })
+                .AddScheme<LykkeTokenAuthenticationSchemeOptions, LykkeTokenAuthenticationHandler>(
+                    JwtBearerDefaults.AuthenticationScheme,
+                    op => { });
 
             ConfigureServicesExt(services);
         }
