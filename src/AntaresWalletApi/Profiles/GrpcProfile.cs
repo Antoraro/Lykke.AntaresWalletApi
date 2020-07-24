@@ -7,9 +7,11 @@ using Lykke.ApiClients.V1;
 using Lykke.ApiClients.V2;
 using Lykke.Service.CandlesHistory.Client.Models;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
+using AnswersRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.AnswersRequest;
 using Candle = Swisschain.Lykke.AntaresWalletApi.ApiContract.Candle;
 using ClientBalanceResponseModel = Lykke.Service.Balances.AutorestClient.Models.ClientBalanceResponseModel;
 using CountryItem = Lykke.ApiClients.V1.CountryItem;
+using QuestionnaireResponse = Swisschain.Lykke.AntaresWalletApi.ApiContract.QuestionnaireResponse;
 using UpgradeRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.UpgradeRequest;
 
 namespace AntaresWalletApi.Profiles
@@ -130,7 +132,12 @@ namespace AntaresWalletApi.Profiles
             CreateMap<TradeResponseModel, TradesResponse.Types.TradeModel>();
             CreateMap<MarketSlice, MarketsResponse.Types.MarketModel>();
             CreateMap<PendingActionsModel, PendingActionsResponse.Types.PendingActionsPayload>();
-
+            CreateMap<Lykke.ApiClients.V1.ApiPersonalDataModel, PersonalDataResponse.Types.PersonalDataPayload>();
+            CreateMap<DocumentModel, KycDocumentsResponse.Types.KycDocument>();
+            CreateMap<FileModel, KycDocumentsResponse.Types.KycFile>();
+            CreateMap<QuestionModel, QuestionnaireResponse.Types.Question>();
+            CreateMap<AnswerModel, QuestionnaireResponse.Types.Answer>();
+            CreateMap<AnswersRequest.Types.Choice, ChoiceModel>();
         }
     }
 }

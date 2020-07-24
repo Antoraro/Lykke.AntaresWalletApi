@@ -48,6 +48,23 @@ service ApiService {
 
     // GET /api/Tiers/Info
     rpc GetTierInfo(google.protobuf.Empty) returns (TierInfoRespone);
+    // GET /api/PersonalData
+    rpc GetPersonalData(google.protobuf.Empty) returns (PersonalDataResponse);
+    // GET /api/KycProfiles/LykkeEurope/documents
+    rpc GetKycDocuments(google.protobuf.Empty) returns (KycDocumentsResponse);
+    // POST (v2) /api/client/address
+    rpc SetAddress(SetAddressRequest) returns (EmptyResponseV2);
+    // POST (v2) /api/client/zip
+    rpc SetZip(SetZipRequest) returns (EmptyResponseV2);
+    //POST /api/KycFiles?documentType={documentType}}&fileType=
+    rpc UploadKycFile(KycFileRequest) returns (EmptyResponse);
+    //GET /api/Tiers/questionnaire
+    rpc GetQuestionnaire(google.protobuf.Empty) returns (QuestionnaireResponse);
+    //POST /api/Tiers/questionnaire
+    rpc SaveQuestionnaire(AnswersRequest) returns (EmptyResponse);
+    //POST /api/KycProfiles/LykkeEurope?tier={tier}
+    rpc SubmitProfile(SubmitProfileRequest) returns (EmptyResponse);
+
     // GET /api/Wallets
     rpc GetWallets(google.protobuf.Empty) returns (WalletsResponse);
     // GET /api/Wallets/{assetId}
@@ -191,6 +208,41 @@ message UpdateWatchlistRequest {
 
 message DeleteWatchlistRequest {
     string id = 1;
+}
+
+message SetAddressRequest {
+    string address = 1;
+}
+
+message SetZipRequest {
+    string zip = 1;
+}
+
+message KycFileRequest {
+    string documentType = 1;
+    string filename = 2;
+    bytes file = 3;
+}
+
+message AnswersRequest {
+    repeated Choice answers = 1;
+
+    message Choice {
+        string questionId = 1;
+        repeated string answerIds = 2;
+        string other = 3;
+    }
+}
+
+message SubmitProfileRequest {
+    oneof optional_tier {
+        TierUpgrade tier = 1;
+    }
+}
+
+enum TierUpgrade {
+    Advanced = 0;
+    ProIndividual = 1;
 }
 
 message WalletRequest {
@@ -465,6 +517,67 @@ message DeleteWatchlistResponse {
 message TierInfoRespone {
     TierInfoPayload result = 1;
     ErrorV1 error = 2;
+}
+
+message PersonalDataResponse {
+    PersonalDataPayload result = 1;
+    ErrorV1 error = 2;
+
+    message PersonalDataPayload {
+        string fullName = 1;
+        string firstName = 2;
+        string lastName = 3;
+        string email = 4;
+        string phone = 5;
+        string country = 6;
+        string address = 7;
+        string city = 8;
+        string zip = 9;
+    }
+}
+
+message KycDocumentsResponse {
+    map<string, KycDocument> result = 1;
+    ErrorV1 error = 2;
+
+    message KycDocument {
+        string id = 1;
+        string type = 2;
+        string status = 3;
+        string rejectReason = 4;
+        repeated KycFile files = 5;
+    }
+
+    message KycFile {
+        string id = 1;
+        string type = 2;
+        string title = 3;
+        string contentType = 4;
+        string fileName = 5;
+    }
+}
+
+message QuestionnaireResponse {
+    QuestionnairePayload result = 1;
+    ErrorV1 error = 2;
+
+    message QuestionnairePayload {
+        repeated Question questionnaire = 1;
+    }
+
+    message Question {
+        string id = 1;
+        string text = 2;
+        string type = 3;
+        bool required = 4;
+        bool hasOther = 5;
+        repeated Answer answers = 6;
+    }
+
+    message Answer {
+        string id = 1;
+        string text = 2;
+    }
 }
 
 message TierInfoPayload {
