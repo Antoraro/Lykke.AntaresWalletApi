@@ -13,6 +13,12 @@ Services:
     settings-key: BalancesServiceUr
   ClientAccountServiceUrl:
     settings-key: ClientAccountServiceUrl
+  RateCalculatorServiceUrl:
+    settings-key: RateCalculatorServiceUrl
+WalletApi:
+  Secret:
+    settings-key: AntaresWalletApi-WalletApi-Secret
+
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl
@@ -22,6 +28,10 @@ MyNoSqlServer:
     settings-key: MyNoSqlServer-PricesTableName
   CandlesTableName:
     settings-key: MyNoSqlServer-CandlesTableName
+  TickersTableName:
+    settings-key: MyNoSqlServer-TickersTableName
+  OrderbooksTableName:
+    settings-key: MyNoSqlServer-OrderbooksTableName
 RabbitMq:
   Candles:
     ConnectionString:
@@ -33,6 +43,13 @@ MatchingEngine:
     settings-key: MatchingEngine-Host
   Port:
     settings-key: MatchingEngine-Port
+Redis:
+  RedisConfiguration:
+    settings-key: HFT-RedisConfiguration
+  InstanceName:
+    settings-key: OrderBooks-CacheInstance
+  OrderBooksCacheKeyPattern:
+    settings-key: OrderBooks-CacheKeyPattern
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls
