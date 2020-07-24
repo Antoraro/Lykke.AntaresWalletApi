@@ -22,7 +22,6 @@ using Lykke.Service.CandlesHistory.Client.Models;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using Lykke.Service.RateCalculator.Client;
-using Microsoft.AspNetCore.Authorization;
 using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
@@ -92,15 +91,14 @@ namespace AntaresWalletApi.GrpcServices
             _mapper = mapper;
         }
 
-        [Authorize]
         public override async Task<AssetsDictionaryResponse> AssetsDictionary(Empty request, ServerCallContext context)
         {
             var result = new AssetsDictionaryResponse();
 
             var categories = await _assetsService.AssetCategoryGetAllAsync();
 
-            string clientId = context.GetHttpContext().GetClientId();
-            string partnerId = context.GetHttpContext().GetPartnerId();
+            string clientId = context.GetClientId();
+            string partnerId = context.GetParnerId();
 
             var assets = await _assetsHelper.GetAssetsAvailableToClientAsync(clientId, partnerId, true);
 

@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using AntaresWalletApi.Extensions;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace AntaresWalletApi.Infrastructure.Authentication
 {
@@ -10,15 +12,18 @@ namespace AntaresWalletApi.Infrastructure.Authentication
     {
         private readonly IGrpcPrincipal _grpcPrincipal;
 
-        public LykkeTokenInterceptor(
-            IGrpcPrincipal grpcPrincipal
-        )
+        public LykkeTokenInterceptor(IGrpcPrincipal grpcPrincipal)
         {
             _grpcPrincipal = grpcPrincipal;
         }
 
-        public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(TRequest request, ServerCallContext context, UnaryServerMethod<TRequest, TResponse> continuation)
+        public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(TRequest request,
+            ServerCallContext context,
+            UnaryServerMethod<TRequest, TResponse> continuation)
         {
+            if (!IsAuthRequired(context))
+                return await base.UnaryServerHandler(request, context, continuation);
+
             var token = context.GetToken();
             if (token == null)
             {
@@ -39,7 +44,16 @@ namespace AntaresWalletApi.Infrastructure.Authentication
 
             return await base.UnaryServerHandler(request, context, continuation);
         }
+
+        private bool IsAuthRequired(ServerCallContext context)
+        {
+            var endpoint = context.GetHttpContext().GetEndpoint();
+            var anonymousAttribute = endpoint.Metadata.GetMetadata<AllowAnonymousAttribute>();
+
+            return anonymousAttribute == null;
+        }
     }
+
 
     public static class UserStateProperties
     {
