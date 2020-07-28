@@ -346,6 +346,77 @@ namespace AntaresWalletApi.GrpcServices
             return result;
         }
 
+        public override async Task<PushSettingsResponse> GetPushSettings(Empty request, ServerCallContext context)
+        {
+            var result = new PushSettingsResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.PushSettingsGetAsync(token);
+
+                if (response.Result != null)
+                {
+                    result.Result = new PushSettingsResponse.Types.PushSettingsPayload
+                    {
+                        Enabled = response.Result.Enabled
+                    };
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<PushSettingsResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<EmptyResponse> SetPushSettings(PushSettingsRequest request, ServerCallContext context)
+        {
+            var result = new EmptyResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+
+                var response = await _walletApiV1Client.PushSettingsPostAsync(new PushNotificationsSettingsModel{Enabled = request.Enabled}, token);
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<EmptyResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
         public override async Task<LimitOrdersResponse> GetOrders(LimitOrdersRequest request, ServerCallContext context)
         {
             try
@@ -585,6 +656,45 @@ namespace AntaresWalletApi.GrpcServices
                 if (response != null)
                 {
                     result.Trades.AddRange(_mapper.Map<List<TradesResponse.Types.TradeModel>>(response));
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<FundsResponse> GetFunds(FundsRequest request, ServerCallContext context)
+        {
+            var result = new FundsResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var wallets = await _clientAccountClient.Wallets.GetClientWalletsFilteredAsync(context.GetClientId(), WalletType.Trading);
+
+                var walletId = wallets.FirstOrDefault()?.Id;
+
+                var response = await _walletApiV2Client.GetFundsByWalletIdAsync(
+                    walletId, null, request.AssetId, request.Take, request.Skip,
+                    request.OptionalFromDateCase == FundsRequest.OptionalFromDateOneofCase.None ? (DateTimeOffset?) null : request.From.ToDateTimeOffset(),
+                    request.OptionalToDateCase == FundsRequest.OptionalToDateOneofCase.None ? (DateTimeOffset?) null : request.To.ToDateTimeOffset(),
+                    token);
+
+                if (response != null)
+                {
+                    result.Funds.AddRange(_mapper.Map<List<FundsResponse.Types.FundsModel>>(response));
                 }
 
                 return result;

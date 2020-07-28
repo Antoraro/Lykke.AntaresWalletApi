@@ -24,6 +24,12 @@ service ApiService {
     rpc GetPendingActions(google.protobuf.Empty) returns (PendingActionsResponse);
     rpc GetAmountInBaseAsset(AmountInBaseRequest) returns (AmountInBaseAssetResponse);
 
+    // GET	/api/PushSettings
+    rpc GetPushSettings(google.protobuf.Empty) returns (PushSettingsResponse);
+    // POST	/api/PushSettings
+    rpc SetPushSettings(PushSettingsRequest) returns (EmptyResponse);
+
+
     // GET /api/offchain/limit/list
     rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);
     // POST /api/HotWallet/limitOrder
@@ -34,6 +40,8 @@ service ApiService {
     rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
     // GET (v2) /api/History/{walletId}/trades
     rpc GetTrades (TradesRequest) returns (TradesResponse);
+    // GET (v2) /api/History/{walletId}/funds
+    rpc GetFunds (FundsRequest) returns (FundsResponse);
 
     // GET /api/WatchLists
     rpc GetWatchlists(google.protobuf.Empty) returns (WatchlistsResponse);
@@ -137,6 +145,10 @@ message AmountInBaseRequest {
     string assetId = 1;
 }
 
+message PushSettingsRequest {
+    bool enabled = 1;
+}
+
 message MarketsRequest {
     oneof optional_assetPairId {
         string assetPairId = 1;
@@ -187,6 +199,20 @@ message TradesRequest {
     }
     oneof optional_tradeType {
         string tradeType = 6;
+    }
+}
+
+message FundsRequest {
+    oneof optional_assetId {
+        string assetId = 1;
+    }
+    int32 take = 2;
+    int32 skip = 3;
+    oneof optional_fromDate {
+        google.protobuf.Timestamp from = 4;
+    }
+    oneof optional_toDate {
+        google.protobuf.Timestamp to = 5;
     }
 }
 
@@ -440,6 +466,15 @@ message AmountInBaseAssetResponse {
     }
 }
 
+message PushSettingsResponse {
+    PushSettingsPayload result = 1;
+    ErrorV1 error = 2;
+
+    message PushSettingsPayload {
+        bool enabled = 1;
+    }
+}
+
 message LimitOrdersResponse {
     OrdersPayload result = 1;
     ErrorV1 error = 2;
@@ -502,6 +537,23 @@ message TradesResponse {
         string quoteAssetName = 8;
         string quoteVolume = 9;
         google.protobuf.Timestamp timestamp = 10;
+    }
+}
+
+message FundsResponse {
+    repeated FundsModel funds = 1;
+    ErrorV2 error = 2;
+
+    message FundsModel {
+        string id = 1;
+        string assetId = 2;
+        string assetName = 3;
+        string volume = 4;
+        string operation = 5;
+        string type = 6;
+        string status = 7;
+        google.protobuf.Timestamp timestamp = 8;
+        string blockchainHash = 9;
     }
 }
 
@@ -941,17 +993,18 @@ message Asset {
     string id = 1;
     string name = 2;
     string symbol = 3;
-    int32 accuracy = 4;
-    bool kycNeeded = 5;
-    string categoryId = 6;
-    bool cardDeposit = 7;
-    bool swiftDeposit = 8;
-    bool blockchainDeposit = 9;
-    bool swiftWithdrawal = 10;
-    bool forwardWithdrawal = 11;
-    bool crosschainWithdrawal = 12;
-    bool isTrusted = 13;
-    bool canBeBase = 14;
+    string displayId = 4;
+    int32 accuracy = 5;
+    bool kycNeeded = 6;
+    string categoryId = 7;
+    bool cardDeposit = 8;
+    bool swiftDeposit = 9;
+    bool blockchainDeposit = 10;
+    bool swiftWithdrawal = 11;
+    bool forwardWithdrawal = 12;
+    bool crosschainWithdrawal = 13;
+    bool isTrusted = 14;
+    bool canBeBase = 15;
 }
 
 message AssetPair {

@@ -39,7 +39,6 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.CardDeposit, o => o.MapFrom(x => x.BankCardsDepositEnabled))
                 .ForMember(d => d.SwiftDeposit, o => o.MapFrom(x => x.SwiftDepositEnabled))
                 .ForMember(d => d.BlockchainDeposit, o => o.MapFrom(x => x.BlockchainDepositEnabled))
-                .ForMember(d => d.Symbol, o => o.MapFrom(x => x.Symbol ?? x.DisplayId ?? x.Id))
                 .ForMember(d => d.CanBeBase, o => o.MapFrom(x => x.IsBase));
 
             CreateMap<Lykke.Service.Assets.Client.Models.AssetCategory, AssetCategory>(MemberList.Destination)
@@ -145,6 +144,7 @@ namespace AntaresWalletApi.Profiles
             CreateMap<QuestionModel, QuestionnaireResponse.Types.Question>();
             CreateMap<AnswerModel, QuestionnaireResponse.Types.Answer>();
             CreateMap<AnswersRequest.Types.Choice, ChoiceModel>();
+            CreateMap<FundsResponseModel, FundsResponse.Types.FundsModel>();
         }
     }
 }
