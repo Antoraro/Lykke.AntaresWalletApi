@@ -23,8 +23,8 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
-    <PackageReference Include="Lykke.ApiClients.V1" Version="1.0.4" />
-    <PackageReference Include="Lykke.ApiClients.V2" Version="1.0.4" />
+    <PackageReference Include="Lykke.ApiClients.V1" Version="1.0.6" />
+    <PackageReference Include="Lykke.ApiClients.V2" Version="1.0.6" />
     <PackageReference Include="Lykke.Common" Version="7.5.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="3.1.1" />
     <PackageReference Include="Lykke.Logs" Version="7.4.0" />

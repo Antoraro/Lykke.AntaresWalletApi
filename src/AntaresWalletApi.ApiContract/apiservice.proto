@@ -29,6 +29,17 @@ service ApiService {
     // POST	/api/PushSettings
     rpc SetPushSettings(PushSettingsRequest) returns (EmptyResponse);
 
+    // POST /api/Antares/email/send
+    rpc SendVerificationEmail(VerificationEmailRequest) returns (VerificationEmailResponse);
+    // POST /api/Antares/phone/send
+    rpc SendVerificationSms(VerificationSmsRequest) returns (EmptyResponse);
+    // POST /api/Antares/email/verify
+    rpc VerifyEmail(VerifyEmailRequest) returns (VerifyResponse);
+    // POST /api/Antares/phone/verify
+    rpc VerifyPhone(VerifyPhoneRequest) returns (VerifyResponse);
+    // POST /api/Antares/register
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+
 
     // GET /api/offchain/limit/list
     rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);
@@ -147,6 +158,39 @@ message AmountInBaseRequest {
 
 message PushSettingsRequest {
     bool enabled = 1;
+}
+
+message VerificationEmailRequest {
+    string email = 1;
+}
+
+message VerificationSmsRequest {
+    string phone = 1;
+    string token = 2;
+}
+
+message VerifyEmailRequest {
+    string email = 1;
+    string code = 2;
+    string token = 3;
+}
+
+message VerifyPhoneRequest {
+    string phone = 1;
+    string code = 2;
+    string token = 3;
+}
+
+message RegisterRequest {
+    string fullName = 1;
+    string email = 2;
+    string phone = 3;
+    string password = 4;
+    string hint = 5;
+    string countryIso3Code = 6;
+    string affiliateCode = 7;
+    string pin = 8;
+    string token = 9;
 }
 
 message MarketsRequest {
@@ -475,6 +519,38 @@ message PushSettingsResponse {
     }
 }
 
+message VerificationEmailResponse {
+    VerificationEmailPayload result = 1;
+    ErrorV1 error = 2;
+
+    message VerificationEmailPayload {
+        string token = 1;
+    }
+}
+
+message VerifyResponse {
+    VerifyPayload result = 1;
+    ErrorV1 error = 2;
+
+    message VerifyPayload {
+        bool passed = 1;
+    }
+}
+
+message RegisterResponse {
+    RegisterPayload result = 1;
+    ErrorV1 error = 2;
+
+    message RegisterPayload {
+        string token = 1;
+        string notificationsId = 2;
+        PersonalData personalData = 3;
+        bool canCashInViaBankCard = 4;
+        bool swiftDepositEnabled = 5;
+        string state = 6;
+    }
+}
+
 message LimitOrdersResponse {
     OrdersPayload result = 1;
     ErrorV1 error = 2;
@@ -577,20 +653,20 @@ message TierInfoRespone {
 }
 
 message PersonalDataResponse {
-    PersonalDataPayload result = 1;
+    PersonalData result = 1;
     ErrorV1 error = 2;
+}
 
-    message PersonalDataPayload {
-        string fullName = 1;
-        string firstName = 2;
-        string lastName = 3;
-        string email = 4;
-        string phone = 5;
-        string country = 6;
-        string address = 7;
-        string city = 8;
-        string zip = 9;
-    }
+message PersonalData {
+    string fullName = 1;
+    string firstName = 2;
+    string lastName = 3;
+    string email = 4;
+    string phone = 5;
+    string country = 6;
+    string address = 7;
+    string city = 8;
+    string zip = 9;
 }
 
 message KycDocumentsResponse {

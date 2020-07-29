@@ -138,13 +138,14 @@ namespace AntaresWalletApi.Profiles
             CreateMap<TradeResponseModel, TradesResponse.Types.TradeModel>();
             CreateMap<MarketSlice, MarketsResponse.Types.MarketModel>();
             CreateMap<PendingActionsModel, PendingActionsResponse.Types.PendingActionsPayload>();
-            CreateMap<Lykke.ApiClients.V1.ApiPersonalDataModel, PersonalDataResponse.Types.PersonalDataPayload>();
+            CreateMap<Lykke.ApiClients.V1.ApiPersonalDataModel, PersonalData>();
             CreateMap<DocumentModel, KycDocumentsResponse.Types.KycDocument>();
             CreateMap<FileModel, KycDocumentsResponse.Types.KycFile>();
             CreateMap<QuestionModel, QuestionnaireResponse.Types.Question>();
             CreateMap<AnswerModel, QuestionnaireResponse.Types.Answer>();
             CreateMap<AnswersRequest.Types.Choice, ChoiceModel>();
             CreateMap<FundsResponseModel, FundsResponse.Types.FundsModel>();
+            CreateMap<Lykke.ApiClients.V1.AccountsRegistrationResponseModel, RegisterResponse.Types.RegisterPayload>();
         }
     }
 }
