@@ -101,6 +101,11 @@ namespace AntaresWalletApi.Modules
                     _config.MyNoSqlServer.OrderbooksTableName)
             ).As<IMyNoSqlServerDataReader<OrderbookEntity>>().SingleInstance();
 
+            builder.Register(ctx =>
+                new MyNoSqlReadRepository<PublicTradeEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
+                    _config.MyNoSqlServer.PublicTradesTableName)
+            ).As<IMyNoSqlServerDataReader<PublicTradeEntity>>().SingleInstance();
+
             builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
                 .WithParameter("jobPeriod", TimeSpan.FromSeconds(1))

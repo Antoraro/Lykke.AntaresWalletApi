@@ -33,12 +33,26 @@ namespace AntaresWalletApi.Worker.Modules
                 .WithParameter("exchangeName", _config.RabbitMq.Candles.ExchangeName)
                 .SingleInstance();
 
+            builder.RegisterType<PublicTradesSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.PublicTrades.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.PublicTrades.ExchangeName)
+                .SingleInstance();
+
             builder.Register(ctx =>
             {
                 return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<CandleEntity>(() =>
                         _config.MyNoSqlServer.WriterServiceUrl,
                     _config.MyNoSqlServer.CandlesTableName);
             }).As<IMyNoSqlServerDataWriter<CandleEntity>>().SingleInstance();
+
+            builder.Register(ctx =>
+            {
+                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<PublicTradeEntity>(() =>
+                        _config.MyNoSqlServer.WriterServiceUrl,
+                    _config.MyNoSqlServer.PublicTradesTableName);
+            }).As<IMyNoSqlServerDataWriter<PublicTradeEntity>>().SingleInstance();
         }
     }
 }

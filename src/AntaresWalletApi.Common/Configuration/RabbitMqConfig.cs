@@ -3,6 +3,7 @@ namespace AntaresWalletApi.Common.Configuration
     public class RabbitMqConfig
     {
         public RabbitMqConnection Candles { get; set; }
+        public RabbitMqConnection PublicTrades { get; set; }
     }
 
     public class RabbitMqConnection

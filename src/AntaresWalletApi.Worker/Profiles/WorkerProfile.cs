@@ -2,6 +2,7 @@ using System;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using AutoMapper;
 using Lykke.Job.CandlesProducer.Contract;
+using Lykke.Service.TradesAdapter.Contract;
 
 namespace AntaresWalletApi.Worker.Profiles
 {
@@ -15,6 +16,12 @@ namespace AntaresWalletApi.Worker.Profiles
                 .ForMember(d => d.UpdatedAt, o => o.MapFrom(x => x.ChangeTimestamp))
                 .ForMember(d => d.PartitionKey, o => o.MapFrom(x => $"{x.AssetPairId}_{x.PriceType}_{x.TimeInterval}"))
                 .ForMember(d => d.RowKey, o => o.MapFrom(x => x.CandleTimestamp))
+                .ForMember(d => d.TimeStamp, o => o.Ignore())
+                .ForMember(d => d.Expires, o => o.Ignore());
+
+            CreateMap<Trade, PublicTradeEntity>(MemberList.Destination)
+                .ForMember(d => d.PartitionKey, o => o.MapFrom(x => x.AssetPairId))
+                .ForMember(d => d.RowKey, o => o.MapFrom(x => x.Id))
                 .ForMember(d => d.TimeStamp, o => o.Ignore())
                 .ForMember(d => d.Expires, o => o.Ignore());
         }

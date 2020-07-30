@@ -2229,7 +2229,7 @@ namespace AntaresWalletApi.GrpcServices
         }
 
         public override async Task GetPublicTradeUpdates(PublicTradesUpdatesRequest request,
-            IServerStreamWriter<PublicTrade> responseStream,
+            IServerStreamWriter<PublicTradeUpdate> responseStream,
             ServerCallContext context)
         {
             Console.WriteLine($"New public trades stream connect. peer:{context.Peer}");
@@ -2238,7 +2238,10 @@ namespace AntaresWalletApi.GrpcServices
 
             var trades = _mapper.Map<List<PublicTrade>>(data.Records);
 
-            var streamInfo = new StreamInfo<PublicTrade>
+            var initData = new PublicTradeUpdate();
+            initData.Trades.AddRange(trades);
+
+            var streamInfo = new StreamInfo<PublicTradeUpdate>
             {
                 Stream = responseStream,
                 CancelationToken = context.CancellationToken,
@@ -2246,7 +2249,7 @@ namespace AntaresWalletApi.GrpcServices
                 Peer = context.Peer
             };
 
-            await _publicTradesStreamService.RegisterStream(streamInfo, trades);
+            await _publicTradesStreamService.RegisterStream(streamInfo, new List<PublicTradeUpdate>{initData});
         }
     }
 }

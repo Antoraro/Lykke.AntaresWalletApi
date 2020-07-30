@@ -8,5 +8,6 @@ namespace AntaresWalletApi.Common.Configuration
         public string CandlesTableName { get; set; }
         public string TickersTableName { get; set; }
         public string OrderbooksTableName { get; set; }
+        public string PublicTradesTableName { get; set; }
     }
 }

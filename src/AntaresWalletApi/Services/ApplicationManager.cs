@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using Autofac;
 using AutoMapper;
@@ -18,6 +19,7 @@ namespace AntaresWalletApi.Services
         private readonly IMyNoSqlServerDataReader<CandleEntity> _candlesReader;
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
         private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbooksReader;
+        private readonly IMyNoSqlServerDataReader<PublicTradeEntity> _publicTradesReader;
         private readonly PricesStreamService _priceStream;
         private readonly CandlesStreamService _candlesStream;
         private readonly OrderbookStreamService _orderbookStream;
@@ -30,6 +32,7 @@ namespace AntaresWalletApi.Services
             IMyNoSqlServerDataReader<CandleEntity> candlesReader,
             IMyNoSqlServerDataReader<TickerEntity> tickersReader,
             IMyNoSqlServerDataReader<OrderbookEntity> orderbooksReader,
+            IMyNoSqlServerDataReader<PublicTradeEntity> publicTradesReader,
             PricesStreamService priceStream,
             CandlesStreamService candlesStream,
             OrderbookStreamService orderbookStream,
@@ -42,6 +45,7 @@ namespace AntaresWalletApi.Services
             _candlesReader = candlesReader;
             _tickersReader = tickersReader;
             _orderbooksReader = orderbooksReader;
+            _publicTradesReader = publicTradesReader;
             _priceStream = priceStream;
             _candlesStream = candlesStream;
             _orderbookStream = orderbookStream;
@@ -101,6 +105,18 @@ namespace AntaresWalletApi.Services
                     item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
                     item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
                     _orderbookStream.WriteToStream(item, orderbook.AssetPairId);
+                }
+            });
+
+            _publicTradesReader.SubscribeToChanges(trades =>
+            {
+                var tradesByAssetId = trades.GroupBy(x => x.AssetPairId);
+
+                foreach (var tradeByAsset in tradesByAssetId)
+                {
+                    var tradesUpdate = new PublicTradeUpdate();
+                    tradesUpdate.Trades.AddRange( _mapper.Map<List<PublicTrade>>(tradeByAsset.ToList()));
+                    _publicTradesStream.WriteToStream(tradesUpdate, tradeByAsset.Key);
                 }
             });
 

@@ -134,7 +134,7 @@ service ApiService {
     rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
     rpc GetCandleUpdates (CandleUpdatesRequest) returns (stream CandleUpdate);
     rpc GetOrderbookUpdates (OrderbookUpdatesRequest) returns (stream Orderbook);
-    rpc GetPublicTradeUpdates (PublicTradesUpdatesRequest) returns (stream PublicTrade);
+    rpc GetPublicTradeUpdates (PublicTradesUpdatesRequest) returns (stream PublicTradeUpdate);
 }
 
 message BaseAssetUpdateRequest {
@@ -1163,6 +1163,10 @@ message Orderbook {
         string p = 1;
         string v = 2;
     }
+}
+
+message PublicTradeUpdate {
+    repeated PublicTrade trades = 1;
 }
 
 message Balance {
