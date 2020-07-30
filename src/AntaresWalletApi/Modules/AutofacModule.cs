@@ -15,6 +15,7 @@ using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.RateCalculator.Client;
 using Lykke.Service.Session.Client;
+using Lykke.Service.TradesAdapter.Client;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Redis;
 using Microsoft.Extensions.Logging;
@@ -28,6 +29,7 @@ namespace AntaresWalletApi.Modules
     public class AutofacModule : Module
     {
         private readonly AppConfig _config;
+        private ILogFactory _logFactory;
 
         public AutofacModule(AppConfig config)
         {
@@ -58,7 +60,8 @@ namespace AntaresWalletApi.Modules
             builder.Register(ctx =>
                 {
                     var logger = ctx.Resolve<ILoggerFactory>();
-                    return logger.ToLykke();
+                    _logFactory = logger.ToLykke();
+                    return _logFactory;
                 })
                 .As<ILogFactory>();
 
@@ -148,6 +151,13 @@ namespace AntaresWalletApi.Modules
             builder.RegisterType<OrderbooksService>()
                 .WithParameter(TypedParameter.From(_config.Redis.OrderBooksCacheKeyPattern))
                 .AsSelf()
+                .SingleInstance();
+
+            builder.Register(ctx =>
+                    new TradesAdapterClient(_config.Services.TradesAdapterServiceUrl,
+                        ctx.Resolve<ILogFactory>().CreateLog(nameof(TradesAdapterClient)))
+                )
+                .As<ITradesAdapterClient>()
                 .SingleInstance();
         }
     }

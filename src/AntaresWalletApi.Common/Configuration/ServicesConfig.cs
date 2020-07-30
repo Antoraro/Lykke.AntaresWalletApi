@@ -10,5 +10,6 @@ namespace AntaresWalletApi.Common.Configuration
         public string BalancesServiceUrl { get; set; }
         public string ClientAccountServiceUrl { get; set; }
         public string RateCalculatorServiceUrl { get; set; }
+        public string TradesAdapterServiceUrl { get; set; }
     }
 }

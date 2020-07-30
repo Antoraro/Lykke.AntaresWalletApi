@@ -23,6 +23,7 @@ using Lykke.Service.CandlesHistory.Client.Models;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using Lykke.Service.RateCalculator.Client;
+using Lykke.Service.TradesAdapter.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.StaticFiles;
 using MyNoSqlServer.Abstractions;
@@ -60,6 +61,7 @@ namespace AntaresWalletApi.GrpcServices
         private readonly IBalancesClient _balancesClient;
         private readonly IClientAccountClient _clientAccountClient;
         private readonly IRateCalculatorClient _rateCalculatorClient;
+        private readonly ITradesAdapterClient _tradesAdapterClient;
         private readonly WalletApiConfig _walletApiConfig;
         private readonly IMapper _mapper;
 
@@ -79,6 +81,7 @@ namespace AntaresWalletApi.GrpcServices
             IBalancesClient balancesClient,
             IClientAccountClient clientAccountClient,
             IRateCalculatorClient rateCalculatorClient,
+            ITradesAdapterClient tradesAdapterClient,
             WalletApiConfig walletApiConfig,
             IMapper mapper
         )
@@ -98,6 +101,7 @@ namespace AntaresWalletApi.GrpcServices
             _balancesClient = balancesClient;
             _clientAccountClient = clientAccountClient;
             _rateCalculatorClient = rateCalculatorClient;
+            _tradesAdapterClient = tradesAdapterClient;
             _walletApiConfig = walletApiConfig;
             _mapper = mapper;
         }
@@ -906,6 +910,43 @@ namespace AntaresWalletApi.GrpcServices
                     return result;
                 }
 
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<PublicTradesResponse> GetPublicTrades(PublicTradesRequest request, ServerCallContext context)
+        {
+            var result = new PublicTradesResponse();
+
+            if (string.IsNullOrEmpty(request.AssetPairId))
+            {
+                result.Error = new ErrorV1
+                {
+                    Code = "0",
+                    Field = nameof(request.AssetPairId),
+                    Message = $"{nameof(request.AssetPairId)} can't be empty"
+                };
+                return result;
+            }
+
+            try
+            {
+                var response = await _tradesAdapterClient.GetTradesByAssetPairIdAsync(request.AssetPairId, request.Skip, request.Take);
+
+                if (response.Records != null)
+                {
+                    result.Result.AddRange(_mapper.Map<List<PublicTradesResponse.Types.PublicTrade>>(response.Records));
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = new ErrorV1{Message = response.Error.Message};
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
                 throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
             }
         }

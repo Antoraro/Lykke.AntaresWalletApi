@@ -54,6 +54,9 @@ service ApiService {
     // GET (v2) /api/History/{walletId}/funds
     rpc GetFunds (FundsRequest) returns (FundsResponse);
 
+    // GET (public api) /api/Trades/{assetPairId}
+    rpc GetPublicTrades(PublicTradesRequest) returns (PublicTradesResponse);
+
     // GET /api/WatchLists
     rpc GetWatchlists(google.protobuf.Empty) returns (WatchlistsResponse);
     // GET /api/WatchLists/{id}
@@ -258,6 +261,12 @@ message FundsRequest {
     oneof optional_toDate {
         google.protobuf.Timestamp to = 5;
     }
+}
+
+message PublicTradesRequest {
+    string assetPairId = 1;
+    int32 skip = 2;
+    int32 take = 3;
 }
 
 message WatchlistRequest {
@@ -630,6 +639,21 @@ message FundsResponse {
         string status = 7;
         google.protobuf.Timestamp timestamp = 8;
         string blockchainHash = 9;
+    }
+}
+
+message PublicTradesResponse {
+    repeated PublicTrade result = 1;
+    ErrorV1 error = 2;
+
+    message PublicTrade {
+        string id = 1;
+        string assetPairId = 2;
+        google.protobuf.Timestamp dateTime = 3;
+        string volume = 4;
+        int32 index = 5;
+        string price = 6;
+        string action = 7;
     }
 }
 
