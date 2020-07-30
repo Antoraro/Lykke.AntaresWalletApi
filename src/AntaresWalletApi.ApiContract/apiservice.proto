@@ -134,6 +134,7 @@ service ApiService {
     rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
     rpc GetCandleUpdates (CandleUpdatesRequest) returns (stream CandleUpdate);
     rpc GetOrderbookUpdates (OrderbookUpdatesRequest) returns (stream Orderbook);
+    rpc GetPublicTradeUpdates (PublicTradesUpdatesRequest) returns (stream PublicTrade);
 }
 
 message BaseAssetUpdateRequest {
@@ -422,6 +423,10 @@ message OrderbookUpdatesRequest {
     string assetPairId = 1;
 }
 
+message PublicTradesUpdatesRequest {
+    string assetPairId = 1;
+}
+
 enum Side {
     buy = 0;
     sell = 1;
@@ -645,16 +650,15 @@ message FundsResponse {
 message PublicTradesResponse {
     repeated PublicTrade result = 1;
     ErrorV1 error = 2;
+}
 
-    message PublicTrade {
-        string id = 1;
-        string assetPairId = 2;
-        google.protobuf.Timestamp dateTime = 3;
-        string volume = 4;
-        int32 index = 5;
-        string price = 6;
-        string action = 7;
-    }
+message PublicTrade {
+    string id = 1;
+    string assetPairId = 2;
+    google.protobuf.Timestamp dateTime = 3;
+    string volume = 4;
+    string price = 5;
+    string action = 6;
 }
 
 message WatchlistsResponse {

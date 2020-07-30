@@ -54,6 +54,7 @@ namespace AntaresWalletApi.GrpcServices
         private readonly PricesStreamService _priceStreamService;
         private readonly CandlesStreamService _candlesStreamService;
         private readonly OrderbookStreamService _orderbookStreamService;
+        private readonly PublicTradesStreamService _publicTradesStreamService;
         private readonly ICandleshistoryservice _candlesHistoryService;
         private readonly ValidationService _validationService;
         private readonly OrderbooksService _orderbooksService;
@@ -74,6 +75,7 @@ namespace AntaresWalletApi.GrpcServices
             PricesStreamService priceStreamService,
             CandlesStreamService candlesStreamService,
             OrderbookStreamService orderbookStreamService,
+            PublicTradesStreamService publicTradesStreamService,
             ICandleshistoryservice candlesHistoryService,
             ValidationService validationService,
             OrderbooksService orderbooksService,
@@ -94,6 +96,7 @@ namespace AntaresWalletApi.GrpcServices
             _priceStreamService = priceStreamService;
             _candlesStreamService = candlesStreamService;
             _orderbookStreamService = orderbookStreamService;
+            _publicTradesStreamService = publicTradesStreamService;
             _candlesHistoryService = candlesHistoryService;
             _validationService = validationService;
             _orderbooksService = orderbooksService;
@@ -935,7 +938,7 @@ namespace AntaresWalletApi.GrpcServices
 
                 if (response.Records != null)
                 {
-                    result.Result.AddRange(_mapper.Map<List<PublicTradesResponse.Types.PublicTrade>>(response.Records));
+                    result.Result.AddRange(_mapper.Map<List<PublicTrade>>(response.Records));
                 }
 
                 if (response.Error != null)
@@ -2223,6 +2226,27 @@ namespace AntaresWalletApi.GrpcServices
             };
 
             await _orderbookStreamService.RegisterStream(streamInfo, orderbooks);
+        }
+
+        public override async Task GetPublicTradeUpdates(PublicTradesUpdatesRequest request,
+            IServerStreamWriter<PublicTrade> responseStream,
+            ServerCallContext context)
+        {
+            Console.WriteLine($"New public trades stream connect. peer:{context.Peer}");
+
+            var data = await _tradesAdapterClient.GetTradesByAssetPairIdAsync(request.AssetPairId, 0, 50);
+
+            var trades = _mapper.Map<List<PublicTrade>>(data.Records);
+
+            var streamInfo = new StreamInfo<PublicTrade>
+            {
+                Stream = responseStream,
+                CancelationToken = context.CancellationToken,
+                Keys = new [] {request.AssetPairId},
+                Peer = context.Peer
+            };
+
+            await _publicTradesStreamService.RegisterStream(streamInfo, trades);
         }
     }
 }

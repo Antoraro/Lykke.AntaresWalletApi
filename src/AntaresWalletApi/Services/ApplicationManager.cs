@@ -21,6 +21,7 @@ namespace AntaresWalletApi.Services
         private readonly PricesStreamService _priceStream;
         private readonly CandlesStreamService _candlesStream;
         private readonly OrderbookStreamService _orderbookStream;
+        private readonly PublicTradesStreamService _publicTradesStream;
         private readonly IMapper _mapper;
 
         public ApplicationManager(
@@ -32,6 +33,7 @@ namespace AntaresWalletApi.Services
             PricesStreamService priceStream,
             CandlesStreamService candlesStream,
             OrderbookStreamService orderbookStream,
+            PublicTradesStreamService publicTradesStream,
             IMapper mapper
             )
         {
@@ -43,6 +45,7 @@ namespace AntaresWalletApi.Services
             _priceStream = priceStream;
             _candlesStream = candlesStream;
             _orderbookStream = orderbookStream;
+            _publicTradesStream = publicTradesStream;
             _mapper = mapper;
         }
 

@@ -116,6 +116,10 @@ namespace AntaresWalletApi.Modules
                 .WithParameter(TypedParameter.From(true))
                 .AsSelf()
                 .SingleInstance();
+            builder.RegisterType<PublicTradesStreamService>()
+                .WithParameter(TypedParameter.From(true))
+                .AsSelf()
+                .SingleInstance();
 
             builder.RegisterType<ApplicationManager>()
                 .As<IStartable>()
