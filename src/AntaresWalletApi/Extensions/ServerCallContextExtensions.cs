@@ -8,7 +8,7 @@ namespace AntaresWalletApi.Extensions
     {
         public static string GetToken(this ServerCallContext context)
         {
-            var header = GetBearerToken(context);
+            var header = GetAuthorizationHeader(context);
 
             if (string.IsNullOrEmpty(header))
                 return null;
@@ -24,10 +24,15 @@ namespace AntaresWalletApi.Extensions
             return values[1];
         }
 
-        public static string GetBearerToken(this ServerCallContext context)
+        public static string GetAuthorizationHeader(this ServerCallContext context)
         {
             var header = context.RequestHeaders.FirstOrDefault(x => x.Key.ToLowerInvariant() == "authorization")?.Value;
             return header;
+        }
+
+        public static string GetBearerToken(this ServerCallContext context)
+        {
+            return $"Bearer {context.UserState[UserStateProperties.Token]}";
         }
 
         public static string GetClientId(this ServerCallContext context)

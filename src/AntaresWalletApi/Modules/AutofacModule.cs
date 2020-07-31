@@ -14,6 +14,7 @@ using Lykke.Service.Balances.Client;
 using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.RateCalculator.Client;
+using Lykke.Service.Registration;
 using Lykke.Service.Session.Client;
 using Lykke.Service.TradesAdapter.Client;
 using Microsoft.Extensions.Caching.Distributed;
@@ -75,6 +76,7 @@ namespace AntaresWalletApi.Modules
                 .AsSelf()
                 .SingleInstance();
 
+
             builder.Register(ctx =>
                     new MyNoSqlReadRepository<PriceEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
                         _config.MyNoSqlServer.PricesTableName)
@@ -102,6 +104,18 @@ namespace AntaresWalletApi.Modules
             ).As<IMyNoSqlServerDataReader<OrderbookEntity>>().SingleInstance();
 
             builder.Register(ctx =>
+                new MyNoSqlReadRepository<SessionEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
+                    _config.MyNoSqlServer.SessionsTableName)
+            ).As<IMyNoSqlServerDataReader<SessionEntity>>().SingleInstance();
+
+            builder.Register(ctx =>
+            {
+                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<SessionEntity>(() =>
+                        _config.MyNoSqlServer.WriterServiceUrl,
+                    _config.MyNoSqlServer.SessionsTableName);
+            }).As<IMyNoSqlServerDataWriter<SessionEntity>>().SingleInstance();
+
+            builder.Register(ctx =>
                 new MyNoSqlReadRepository<PublicTradeEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
                     _config.MyNoSqlServer.PublicTradesTableName)
             ).As<IMyNoSqlServerDataReader<PublicTradeEntity>>().SingleInstance();
@@ -121,6 +135,7 @@ namespace AntaresWalletApi.Modules
                 .WithParameter(TypedParameter.From(true))
                 .AsSelf()
                 .SingleInstance();
+
             builder.RegisterType<PublicTradesStreamService>()
                 .WithParameter(TypedParameter.From(true))
                 .AsSelf()
@@ -167,6 +182,13 @@ namespace AntaresWalletApi.Modules
                         ctx.Resolve<ILogFactory>().CreateLog(nameof(TradesAdapterClient)))
                 )
                 .As<ITradesAdapterClient>()
+                .SingleInstance();
+
+            builder.RegisterRegistrationServiceClient(new RegistrationServiceClientSettings{ServiceUrl = _config.Services.RegistrationServiceUrl});
+
+            builder.RegisterType<SessionService>()
+                .WithParameter(TypedParameter.From(_config.SessionLifetimeInMins))
+                .AsSelf()
                 .SingleInstance();
         }
     }

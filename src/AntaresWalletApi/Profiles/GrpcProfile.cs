@@ -147,7 +147,8 @@ namespace AntaresWalletApi.Profiles
             CreateMap<AnswerModel, QuestionnaireResponse.Types.Answer>();
             CreateMap<AnswersRequest.Types.Choice, ChoiceModel>();
             CreateMap<FundsResponseModel, FundsResponse.Types.FundsModel>();
-            CreateMap<Lykke.ApiClients.V1.AccountsRegistrationResponseModel, RegisterResponse.Types.RegisterPayload>();
+            CreateMap<Lykke.ApiClients.V1.AccountsRegistrationResponseModel, RegisterResponse.Types.RegisterPayload>()
+                .ForMember(d => d.SessionId, o => o.Ignore());
             CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>();
         }
     }

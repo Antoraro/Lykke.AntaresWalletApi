@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AntaresWalletApi.Extensions;
+using AntaresWalletApi.Services;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
 using Microsoft.AspNetCore.Authorization;
@@ -11,10 +12,15 @@ namespace AntaresWalletApi.Infrastructure.Authentication
     public class LykkeTokenInterceptor : Interceptor
     {
         private readonly IGrpcPrincipal _grpcPrincipal;
+        private readonly SessionService _sessionService;
 
-        public LykkeTokenInterceptor(IGrpcPrincipal grpcPrincipal)
+        public LykkeTokenInterceptor(
+            IGrpcPrincipal grpcPrincipal,
+            SessionService sessionService
+            )
         {
             _grpcPrincipal = grpcPrincipal;
+            _sessionService = sessionService;
         }
 
         public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(TRequest request,
@@ -24,23 +30,37 @@ namespace AntaresWalletApi.Infrastructure.Authentication
             if (!IsAuthRequired(context))
                 return await base.UnaryServerHandler(request, context, continuation);
 
-            var token = context.GetToken();
-            if (token == null)
+            var sessionId = context.GetToken();
+
+            if (sessionId == null)
             {
                 context.Status = new Status(StatusCode.Unauthenticated, "Invalid token");
                 return Activator.CreateInstance<TResponse>();
             }
 
-            var principal = await _grpcPrincipal.GetPrincipalAsync(token);
+            var session = _sessionService.GetSession(sessionId);
 
-            if (principal == null)
+            if (session == null)
             {
-                context.Status = new Status(StatusCode.Unauthenticated, "Invalid token");
+                context.Status = new Status(StatusCode.Unauthenticated, "Session not found");
                 return Activator.CreateInstance<TResponse>();
             }
 
-            context.UserState.Add(UserStateProperties.ClientId, principal.GetClientId());
-            context.UserState.Add(UserStateProperties.PartnerId, principal.GetPartnerId());
+            if (!session.Verified)
+            {
+                context.Status = new Status(StatusCode.Unauthenticated, "Session is not verified");
+                return Activator.CreateInstance<TResponse>();
+            }
+
+            if (DateTime.UtcNow > session.ExpirationDate)
+            {
+                context.Status = new Status(StatusCode.Unauthenticated, "Session is expired");
+                return Activator.CreateInstance<TResponse>();
+            }
+
+            context.UserState.Add(UserStateProperties.ClientId, session.ClientId);
+            context.UserState.Add(UserStateProperties.PartnerId, session.PartnerId);
+            context.UserState.Add(UserStateProperties.Token, session.Token);
 
             return await base.UnaryServerHandler(request, context, continuation);
         }
@@ -54,10 +74,10 @@ namespace AntaresWalletApi.Infrastructure.Authentication
         }
     }
 
-
     public static class UserStateProperties
     {
         public const string ClientId = "clientId";
         public const string PartnerId = "partnerId";
+        public const string Token = "token";
     }
 }

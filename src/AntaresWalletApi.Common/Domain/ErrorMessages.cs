@@ -12,6 +12,8 @@ namespace AntaresWalletApi.Common.Domain
 
         public const string NotEnoughFunds = "Not enough funds";
         public const string MeNotAvailable = "ME not available";
+        public static string CantBeEmpty(string name) => $"{name} cannot be empty.";
+        public static string InvalidFieldValue(string name) => $"{name} value is invalid.";
 
     }
 }

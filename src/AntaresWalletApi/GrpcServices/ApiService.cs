@@ -10,10 +10,12 @@ using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using AntaresWalletApi.Extensions;
 using AntaresWalletApi.Services;
 using AutoMapper;
+using Common;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Lykke.ApiClients.V1;
 using Lykke.ApiClients.V2;
+using Lykke.Common.Extensions;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Models.Api;
 using Lykke.Service.Assets.Client;
@@ -23,6 +25,8 @@ using Lykke.Service.CandlesHistory.Client.Models;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using Lykke.Service.RateCalculator.Client;
+using Lykke.Service.Registration;
+using Lykke.Service.Registration.Contract.Client.Enums;
 using Lykke.Service.TradesAdapter.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.StaticFiles;
@@ -58,11 +62,13 @@ namespace AntaresWalletApi.GrpcServices
         private readonly ICandleshistoryservice _candlesHistoryService;
         private readonly ValidationService _validationService;
         private readonly OrderbooksService _orderbooksService;
+        private readonly SessionService _sessionService;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IBalancesClient _balancesClient;
         private readonly IClientAccountClient _clientAccountClient;
         private readonly IRateCalculatorClient _rateCalculatorClient;
         private readonly ITradesAdapterClient _tradesAdapterClient;
+        private readonly IRegistrationServiceClient _registrationServiceClient;
         private readonly WalletApiConfig _walletApiConfig;
         private readonly IMapper _mapper;
 
@@ -79,11 +85,13 @@ namespace AntaresWalletApi.GrpcServices
             ICandleshistoryservice candlesHistoryService,
             ValidationService validationService,
             OrderbooksService orderbooksService,
+            SessionService sessionService,
             IMatchingEngineClient matchingEngineClient,
             IBalancesClient balancesClient,
             IClientAccountClient clientAccountClient,
             IRateCalculatorClient rateCalculatorClient,
             ITradesAdapterClient tradesAdapterClient,
+            IRegistrationServiceClient registrationServiceClient,
             WalletApiConfig walletApiConfig,
             IMapper mapper
         )
@@ -100,11 +108,13 @@ namespace AntaresWalletApi.GrpcServices
             _candlesHistoryService = candlesHistoryService;
             _validationService = validationService;
             _orderbooksService = orderbooksService;
+            _sessionService = sessionService;
             _matchingEngineClient = matchingEngineClient;
             _balancesClient = balancesClient;
             _clientAccountClient = clientAccountClient;
             _rateCalculatorClient = rateCalculatorClient;
             _tradesAdapterClient = tradesAdapterClient;
+            _registrationServiceClient = registrationServiceClient;
             _walletApiConfig = walletApiConfig;
             _mapper = mapper;
         }
@@ -596,6 +606,8 @@ namespace AntaresWalletApi.GrpcServices
                 if (response.Result != null)
                 {
                     result.Result = _mapper.Map<RegisterResponse.Types.RegisterPayload>(response.Result);
+                    var session = await _sessionService.CreateVerifiedSessionAsync(response.Result.Token, request.PublicKey);
+                    result.Result.SessionId = session.Id;
                 }
 
                 if (response.Error != null)
@@ -618,6 +630,254 @@ namespace AntaresWalletApi.GrpcServices
 
                 throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
             }
+        }
+
+        [AllowAnonymous]
+        public override async Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
+        {
+            var validateResult = ValidateLoginRequest(request);
+
+            if (validateResult != null)
+                return validateResult;
+
+            var result = new LoginResponse();
+
+            try
+            {
+                var response = await _registrationServiceClient.LoginApi.AuthenticateAsync(new Lykke.Service.Registration.Contract.Client.Models.AuthenticateModel
+                {
+                    Email = request.Email,
+                    Password = request.Password,
+                    Ip = context.GetHttpContext().GetIp(),
+                    UserAgent = context.GetHttpContext().GetUserAgent()
+                });
+
+                if (response.Status == AuthenticationStatus.Error)
+                {
+                    result.Error = new ErrorV1
+                    {
+                        Code = "2",
+                        Message = response.ErrorMessage
+                    };
+
+                    return result;
+                }
+
+                var session = await _sessionService.CreateSessionAsync(response.Token, request.PublicKey);
+
+                result.Result = new LoginResponse.Types.LoginPayload
+                {
+                    SessionId = session.Id,
+                    NotificationId = response.NotificationsId
+                };
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        [AllowAnonymous]
+        public override async Task<EmptyResponse> SendLoginSms(LoginSmsRequest request, ServerCallContext context)
+        {
+            var result = new EmptyResponse();
+
+            var session = _sessionService.GetSession(request.SessionId);
+
+            if (session == null)
+            {
+                result.Error = new ErrorV1
+                {
+                    Code = "0",
+                    Message = ErrorMessages.InvalidFieldValue(nameof(request.SessionId)),
+                    Field = nameof(request.SessionId)
+                };
+
+                return result;
+            }
+
+            try
+            {
+                var response = await _walletApiV1Client.RequestCodesAsync($"Bearer {session.Token}");
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<EmptyResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        [AllowAnonymous]
+        public override async Task<VerifyLoginSmsResponse> VerifyLoginSms(VerifyLoginSmsRequest request, ServerCallContext context)
+        {
+            var result = new VerifyLoginSmsResponse();
+
+            var session = _sessionService.GetSession(request.SessionId);
+
+            if (session == null)
+            {
+                result.Error = new ErrorV1
+                {
+                    Code = "0",
+                    Message = ErrorMessages.InvalidFieldValue(nameof(request.SessionId)),
+                    Field = nameof(request.SessionId)
+                };
+
+                return result;
+            }
+
+            try
+            {
+                var response = await _walletApiV1Client.SubmitCodeAsync(new SubmitCodeModel
+                {
+                    Code = request.Code
+                }, $"Bearer {session.Token}");
+
+                if (response.Result != null)
+                {
+                    result.Result = new VerifyLoginSmsResponse.Types.VerifyLoginSmsPayload{Passed = true};
+                    session.Sms = true;
+                    await _sessionService.SaveSessionAsync(session);
+                }
+
+                if (response.Error != null)
+                {
+                    var error = _mapper.Map<ErrorV1>(response.Error);
+
+                    if (error.Code == "WrongConfirmationCode")
+                    {
+                        result.Result = new VerifyLoginSmsResponse.Types.VerifyLoginSmsPayload{Passed = false};
+                        return result;
+                    }
+
+                    result.Error = error;
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<VerifyLoginSmsResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        [AllowAnonymous]
+        public override async Task<CheckPinResponse> CheckPin(CheckPinRequest request, ServerCallContext context)
+        {
+            var result = new CheckPinResponse();
+
+            var session = _sessionService.GetSession(request.SessionId);
+
+            if (session == null)
+            {
+                result.Error = new ErrorV1
+                {
+                    Code = "0",
+                    Message = ErrorMessages.InvalidFieldValue(nameof(request.SessionId)),
+                    Field = nameof(request.SessionId)
+                };
+
+                return result;
+            }
+
+            try
+            {
+                var response = await _walletApiV1Client.PinSecurityCheckPinCodePostAsync(new PinSecurityCheckRequestModel
+                {
+                    Pin = request.Pin
+                }, $"Bearer {session.Token}");
+
+                if (response.Result != null)
+                {
+                    result.Result = new CheckPinResponse.Types.CheckPinPayload{Passed = response.Result.Passed};
+
+                    if (result.Result.Passed)
+                    {
+                        if (session.Verified)
+                        {
+                            await _sessionService.ProlongateSessionAsync(session);
+                        }
+                        else
+                        {
+                            session.Pin = true;
+
+                            if (session.Sms)
+                                session.Verified = true;
+
+                            await _sessionService.SaveSessionAsync(session);
+                        }
+                    }
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<CheckPinResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        [AllowAnonymous]
+        public override async Task<EmptyResponse> ProlongateSession(ProlongateSessionRequest request, ServerCallContext context)
+        {
+            var result = new EmptyResponse();
+            var session = _sessionService.GetSession(request.SessionId);
+
+            if (session == null)
+            {
+                result.Error = new ErrorV1
+                {
+                    Code = "0",
+                    Message = ErrorMessages.InvalidFieldValue(nameof(request.SessionId)),
+                    Field = nameof(request.SessionId)
+                };
+
+                return result;
+            }
+
+            await _sessionService.ProlongateSessionAsync(session);
+
+            return result;
         }
 
         public override async Task<LimitOrdersResponse> GetOrders(LimitOrdersRequest request, ServerCallContext context)
@@ -2250,6 +2510,44 @@ namespace AntaresWalletApi.GrpcServices
             };
 
             await _publicTradesStreamService.RegisterStream(streamInfo, new List<PublicTradeUpdate>{initData});
+        }
+
+        private LoginResponse ValidateLoginRequest(LoginRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email))
+                return new LoginResponse
+                {
+                    Error = new ErrorV1
+                    {
+                        Code = "0",
+                        Message = ErrorMessages.CantBeEmpty(nameof(request.Email)),
+                        Field = nameof(request.Email)
+                    }
+                };
+
+            if (!request.Email.IsValidEmailAndRowKey())
+                return new LoginResponse
+                {
+                    Error = new ErrorV1
+                    {
+                        Code = "0",
+                        Message = ErrorMessages.InvalidFieldValue(nameof(request.Email)),
+                        Field = nameof(request.Email)
+                    }
+                };
+
+            if (string.IsNullOrEmpty(request.Password))
+                return new LoginResponse
+                {
+                    Error = new ErrorV1
+                    {
+                        Code = "0",
+                        Message = ErrorMessages.CantBeEmpty(nameof(request.Password)),
+                        Field = nameof(request.Password)
+                    }
+                };
+
+            return null;
         }
     }
 }

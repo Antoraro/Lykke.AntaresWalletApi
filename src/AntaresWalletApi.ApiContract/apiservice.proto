@@ -31,15 +31,23 @@ service ApiService {
 
     // POST /api/Antares/email/send
     rpc SendVerificationEmail(VerificationEmailRequest) returns (VerificationEmailResponse);
-    // POST /api/Antares/phone/send
-    rpc SendVerificationSms(VerificationSmsRequest) returns (EmptyResponse);
     // POST /api/Antares/email/verify
     rpc VerifyEmail(VerifyEmailRequest) returns (VerifyResponse);
+    // POST /api/Antares/phone/send
+    rpc SendVerificationSms(VerificationSmsRequest) returns (EmptyResponse);
     // POST /api/Antares/phone/verify
     rpc VerifyPhone(VerifyPhoneRequest) returns (VerifyResponse);
     // POST /api/Antares/register
     rpc Register(RegisterRequest) returns (RegisterResponse);
 
+    rpc Login(LoginRequest) returns (LoginResponse);
+    // GET /api/Client/codes
+    rpc SendLoginSms(LoginSmsRequest) returns (EmptyResponse);
+    // POST /api/Client/codes
+    rpc VerifyLoginSms(VerifyLoginSmsRequest) returns (VerifyLoginSmsResponse);
+    rpc CheckPin(CheckPinRequest) returns (CheckPinResponse);
+
+    rpc ProlongateSession(ProlongateSessionRequest) returns (EmptyResponse);
 
     // GET /api/offchain/limit/list
     rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);
@@ -195,6 +203,31 @@ message RegisterRequest {
     string affiliateCode = 7;
     string pin = 8;
     string token = 9;
+    string publicKey = 10;
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+    string publicKey = 3;
+}
+
+message LoginSmsRequest {
+    string sessionId = 1;
+}
+
+message VerifyLoginSmsRequest {
+    string sessionId = 1;
+    string code = 2;
+}
+
+message CheckPinRequest {
+    string sessionId = 1;
+    string pin = 2;
+}
+
+message ProlongateSessionRequest {
+    string sessionId = 1;
 }
 
 message MarketsRequest {
@@ -556,12 +589,40 @@ message RegisterResponse {
     ErrorV1 error = 2;
 
     message RegisterPayload {
-        string token = 1;
+        string sessionId = 1;
         string notificationsId = 2;
         PersonalData personalData = 3;
         bool canCashInViaBankCard = 4;
         bool swiftDepositEnabled = 5;
         string state = 6;
+    }
+}
+
+message LoginResponse {
+    LoginPayload result = 1;
+    ErrorV1 error = 2;
+
+    message LoginPayload {
+        string sessionId = 1;
+        string notificationId = 2;
+    }
+}
+
+message VerifyLoginSmsResponse {
+    VerifyLoginSmsPayload result = 1;
+    ErrorV1 error = 2;
+
+    message VerifyLoginSmsPayload {
+        bool passed = 1;
+    }
+}
+
+message CheckPinResponse {
+    CheckPinPayload result = 1;
+    ErrorV1 error = 2;
+
+    message CheckPinPayload {
+        bool passed = 1;
     }
 }
 

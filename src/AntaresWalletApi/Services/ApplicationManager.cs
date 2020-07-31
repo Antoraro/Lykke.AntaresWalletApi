@@ -20,6 +20,7 @@ namespace AntaresWalletApi.Services
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
         private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbooksReader;
         private readonly IMyNoSqlServerDataReader<PublicTradeEntity> _publicTradesReader;
+        private readonly IMyNoSqlServerDataReader<SessionEntity> _sessionsReader;
         private readonly PricesStreamService _priceStream;
         private readonly CandlesStreamService _candlesStream;
         private readonly OrderbookStreamService _orderbookStream;
@@ -33,6 +34,7 @@ namespace AntaresWalletApi.Services
             IMyNoSqlServerDataReader<TickerEntity> tickersReader,
             IMyNoSqlServerDataReader<OrderbookEntity> orderbooksReader,
             IMyNoSqlServerDataReader<PublicTradeEntity> publicTradesReader,
+            IMyNoSqlServerDataReader<SessionEntity> sessionsReader,
             PricesStreamService priceStream,
             CandlesStreamService candlesStream,
             OrderbookStreamService orderbookStream,
@@ -46,6 +48,7 @@ namespace AntaresWalletApi.Services
             _tickersReader = tickersReader;
             _orderbooksReader = orderbooksReader;
             _publicTradesReader = publicTradesReader;
+            _sessionsReader = sessionsReader;
             _priceStream = priceStream;
             _candlesStream = candlesStream;
             _orderbookStream = orderbookStream;
@@ -119,6 +122,8 @@ namespace AntaresWalletApi.Services
                     _publicTradesStream.WriteToStream(tradesUpdate, tradeByAsset.Key);
                 }
             });
+
+            _sessionsReader.SubscribeToChanges(sessions => { });
 
             Console.WriteLine("Stream services started.");
         }

@@ -8,5 +8,6 @@
         public MeConfig MatchingEngine { get; set; }
         public WalletApiConfig WalletApi { get; set; }
         public RedisConfig Redis { get; set; }
+        public int SessionLifetimeInMins { get; set; }
     }
 }
