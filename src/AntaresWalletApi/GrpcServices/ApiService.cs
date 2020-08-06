@@ -1919,19 +1919,21 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        [AllowAnonymous]
         public override async Task<CountryPhoneCodesResponse> GetCountryPhoneCodes(Empty request, ServerCallContext context)
         {
             var result = new CountryPhoneCodesResponse();
 
             try
             {
-                var token = context.GetBearerToken();
                 var response = await _walletApiV1Client.GetCountryPhoneCodesAsync();
 
                 if (response.Result != null)
                 {
-                    result.Result = new CountryPhoneCodesResponse.Types.CountryPhoneCodes();
-                    result.Result.Current = response.Result.Current;
+                    result.Result = new CountryPhoneCodesResponse.Types.CountryPhoneCodes
+                    {
+                        Current = response.Result.Current
+                    };
                     result.Result.CountriesList.AddRange(_mapper.Map<List<Country>>(response.Result.CountriesList));
                 }
 
