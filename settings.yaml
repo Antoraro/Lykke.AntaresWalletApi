@@ -15,6 +15,10 @@ Services:
     settings-key: ClientAccountServiceUrl
   RateCalculatorServiceUrl:
     settings-key: RateCalculatorServiceUrl
+  TradesAdapterServiceUrl:
+    settings-key: TradesAdapterServiceUrl
+  RegistrationServiceUrl:
+    settings-key: RegistrationServiceUrl
 WalletApi:
   Secret:
     settings-key: AntaresWalletApi-WalletApi-Secret
@@ -32,6 +36,10 @@ MyNoSqlServer:
     settings-key: MyNoSqlServer-TickersTableName
   OrderbooksTableName:
     settings-key: MyNoSqlServer-OrderbooksTableName
+  PublicTradesTableName:
+    settings-key: MyNoSqlServer-PublicTradesTableName
+  SessionsTableName:
+    settings-key: MyNoSqlServer-SessionsTableName
 RabbitMq:
   Candles:
     ConnectionString:
