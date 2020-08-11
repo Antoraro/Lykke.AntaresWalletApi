@@ -857,19 +857,21 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
-        [AllowAnonymous]
-        public override async Task<EmptyResponse> ProlongateSession(ProlongateSessionRequest request, ServerCallContext context)
+        public override async Task<EmptyResponse> ProlongateSession(Empty request, ServerCallContext context)
         {
             var result = new EmptyResponse();
-            var session = _sessionService.GetSession(request.SessionId);
+
+            string sessionId = context.GetToken();
+
+            var session = _sessionService.GetSession(sessionId);
 
             if (session == null)
             {
                 result.Error = new ErrorV1
                 {
                     Code = "0",
-                    Message = ErrorMessages.InvalidFieldValue(nameof(request.SessionId)),
-                    Field = nameof(request.SessionId)
+                    Message = ErrorMessages.InvalidFieldValue(nameof(sessionId)),
+                    Field = nameof(sessionId)
                 };
 
                 return result;

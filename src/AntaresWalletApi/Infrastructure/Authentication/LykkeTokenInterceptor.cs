@@ -34,7 +34,7 @@ namespace AntaresWalletApi.Infrastructure.Authentication
 
             if (sessionId == null)
             {
-                context.Status = new Status(StatusCode.Unauthenticated, "Invalid token");
+                context.Status = new Status(StatusCode.Unauthenticated, "InvalidToken");
                 return Activator.CreateInstance<TResponse>();
             }
 
@@ -42,19 +42,19 @@ namespace AntaresWalletApi.Infrastructure.Authentication
 
             if (session == null)
             {
-                context.Status = new Status(StatusCode.Unauthenticated, "Session not found");
+                context.Status = new Status(StatusCode.Unauthenticated, "SessionNotFound");
                 return Activator.CreateInstance<TResponse>();
             }
 
             if (!session.Verified)
             {
-                context.Status = new Status(StatusCode.Unauthenticated, "Session is not verified");
+                context.Status = new Status(StatusCode.Unauthenticated, "SessionNotVerified");
                 return Activator.CreateInstance<TResponse>();
             }
 
             if (DateTime.UtcNow > session.ExpirationDate)
             {
-                context.Status = new Status(StatusCode.Unauthenticated, "Session is expired");
+                context.Status = new Status(StatusCode.Unauthenticated, "SessionExpired");
                 return Activator.CreateInstance<TResponse>();
             }
 
