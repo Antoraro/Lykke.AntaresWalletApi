@@ -690,7 +690,7 @@ namespace AntaresWalletApi.GrpcServices
             {
                 result.Error = new ErrorV1
                 {
-                    Code = "0",
+                    Code = ErrorModelCode.InvalidInputField.ToString(),
                     Message = ErrorMessages.InvalidFieldValue(nameof(request.SessionId)),
                     Field = nameof(request.SessionId)
                 };
@@ -735,7 +735,7 @@ namespace AntaresWalletApi.GrpcServices
             {
                 result.Error = new ErrorV1
                 {
-                    Code = "0",
+                    Code = ErrorModelCode.InvalidInputField.ToString(),
                     Message = ErrorMessages.InvalidFieldValue(nameof(request.SessionId)),
                     Field = nameof(request.SessionId)
                 };
@@ -798,7 +798,7 @@ namespace AntaresWalletApi.GrpcServices
             {
                 result.Error = new ErrorV1
                 {
-                    Code = "0",
+                    Code = ErrorModelCode.InvalidInputField.ToString(),
                     Message = ErrorMessages.InvalidFieldValue(nameof(request.SessionId)),
                     Field = nameof(request.SessionId)
                 };
@@ -857,6 +857,18 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        [AllowAnonymous]
+        public override Task<CheckSessionResponse> IsSessionExpired(CheckSessionRequest request, ServerCallContext context)
+        {
+            var result = new CheckSessionResponse();
+
+            var session = _sessionService.GetSession(request.SessionId);
+
+            result.Expired = session == null || session.ExpirationDate < DateTime.UtcNow;
+
+            return Task.FromResult(result);
+        }
+
         public override async Task<EmptyResponse> ProlongateSession(Empty request, ServerCallContext context)
         {
             var result = new EmptyResponse();
@@ -869,7 +881,7 @@ namespace AntaresWalletApi.GrpcServices
             {
                 result.Error = new ErrorV1
                 {
-                    Code = "0",
+                    Code = ErrorModelCode.InvalidInputField.ToString(),
                     Message = ErrorMessages.InvalidFieldValue(nameof(sessionId)),
                     Field = nameof(sessionId)
                 };
@@ -1187,7 +1199,7 @@ namespace AntaresWalletApi.GrpcServices
             {
                 result.Error = new ErrorV1
                 {
-                    Code = "0",
+                    Code = ErrorModelCode.InvalidInputField.ToString(),
                     Field = nameof(request.AssetPairId),
                     Message = $"{nameof(request.AssetPairId)} can't be empty"
                 };
@@ -2523,7 +2535,7 @@ namespace AntaresWalletApi.GrpcServices
                 {
                     Error = new ErrorV1
                     {
-                        Code = "0",
+                        Code = ErrorModelCode.InvalidInputField.ToString(),
                         Message = ErrorMessages.CantBeEmpty(nameof(request.Email)),
                         Field = nameof(request.Email)
                     }
@@ -2534,7 +2546,7 @@ namespace AntaresWalletApi.GrpcServices
                 {
                     Error = new ErrorV1
                     {
-                        Code = "0",
+                        Code = ErrorModelCode.InvalidInputField.ToString(),
                         Message = ErrorMessages.InvalidFieldValue(nameof(request.Email)),
                         Field = nameof(request.Email)
                     }
@@ -2545,7 +2557,7 @@ namespace AntaresWalletApi.GrpcServices
                 {
                     Error = new ErrorV1
                     {
-                        Code = "0",
+                        Code = ErrorModelCode.InvalidInputField.ToString(),
                         Message = ErrorMessages.CantBeEmpty(nameof(request.Password)),
                         Field = nameof(request.Password)
                     }
