@@ -46,6 +46,11 @@ RabbitMq:
       settings-key: CandlesConnectionString
     ExchangeName:
       settings-key: CandlesExchangeName
+  PublicTrades:
+    ConnectionString:
+      settings-key: PublicTradesConnectionString
+    ExchangeName:
+      settings-key: PublicTradesExchangeName
 MatchingEngine:
   Host:
     settings-key: MatchingEngine-Host
