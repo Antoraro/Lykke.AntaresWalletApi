@@ -1,3 +1,5 @@
+SessionLifetimeInMins:
+  settings-key: AntaresWalletApi-SessionLifetimeInMins
 Services:
   WalletApiv1Url:
     settings-key: WalletApiV1Url
@@ -22,7 +24,6 @@ Services:
 WalletApi:
   Secret:
     settings-key: AntaresWalletApi-WalletApi-Secret
-
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl
