@@ -1175,6 +1175,7 @@ message Asset {
     bool crosschainWithdrawal = 13;
     bool isTrusted = 14;
     bool canBeBase = 15;
+    string iconUrl = 16;
 }
 
 message AssetPair {
