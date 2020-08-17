@@ -277,6 +277,12 @@ namespace AntaresWalletApi.GrpcServices
             return res;
         }
 
+        public override async Task<Orderbook> GetOrderbook(OrderbookRequest request, ServerCallContext context)
+        {
+            var orderbook = (await _orderbooksService.GetAsync(request.AssetPairId)).FirstOrDefault();
+            return orderbook;
+        }
+
         public override async Task<MarketsResponse> GetMarkets(MarketsRequest request, ServerCallContext context)
         {
             var result = new MarketsResponse();

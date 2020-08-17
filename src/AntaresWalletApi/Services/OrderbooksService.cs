@@ -110,7 +110,10 @@ namespace AntaresWalletApi.Services
 
             if (orderbookEntity != null)
             {
-                return _mapper.Map<Orderbook>(orderbookEntity);
+                var orderbook = _mapper.Map<Orderbook>(orderbookEntity);
+                orderbook.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbookEntity.Bids));
+                orderbook.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbookEntity.Asks));
+                return orderbook;
             }
 
             var buyBook = GetOrderbook(assetPairId, true);

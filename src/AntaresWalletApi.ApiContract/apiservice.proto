@@ -18,6 +18,7 @@ service ApiService {
     rpc GetPrices (PricesRequest) returns (PricesResponse);
     rpc GetCandles (CandlesRequest) returns (CandlesResponse);
     rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
+    rpc GetOrderbook (OrderbookRequest) returns (Orderbook);
     // GET (v2) /api/markets
     rpc GetMarkets (MarketsRequest) returns (MarketsResponse);
     // GET	/api/Client/pendingActions
@@ -165,6 +166,10 @@ message CandlesRequest {
     CandleInterval interval = 3;
     google.protobuf.Timestamp from = 4;
     google.protobuf.Timestamp to = 5;
+}
+
+message OrderbookRequest {
+    string assetPairId = 1;
 }
 
 message AmountInBaseRequest {
