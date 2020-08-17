@@ -150,6 +150,7 @@ namespace AntaresWalletApi.Profiles
             CreateMap<Lykke.ApiClients.V1.AccountsRegistrationResponseModel, RegisterResponse.Types.RegisterPayload>()
                 .ForMember(d => d.SessionId, o => o.Ignore());
             CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>();
+            CreateMap<BlockchainExplorerLinkResponse, ExplorerLinksResponse.Types.ExplorerLinkModel>();
         }
     }
 }

@@ -1191,6 +1191,42 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        public override async Task<ExplorerLinksResponse> GetExplorerLinks(ExplorerLinksRequest request, ServerCallContext context)
+        {
+            var result = new ExplorerLinksResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var wallets = await _clientAccountClient.Wallets.GetClientWalletsFilteredAsync(context.GetClientId(), WalletType.Trading);
+
+                var walletId = wallets.FirstOrDefault()?.Id;
+
+                var response = await _walletApiV2Client.GetExplorerLinksAsync(request.AssetId, request.TransactionHash,
+                    token);
+
+                if (response != null)
+                {
+                    result.Links.AddRange(_mapper.Map<List<ExplorerLinksResponse.Types.ExplorerLinkModel>>(response.Links));
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
         public override async Task<PublicTradesResponse> GetPublicTrades(PublicTradesRequest request, ServerCallContext context)
         {
             var result = new PublicTradesResponse();
