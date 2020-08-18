@@ -35,8 +35,8 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
         workdir: ./publish-api
         # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
-        tag_names: true  
-        tag_name_skip: service-    
+        tag_names: true
+        tag_name_skip: service-
     - name: Publish worker to Registry
       uses: swisschain/Publish-Docker-Github-Action@master
       with:
@@ -45,11 +45,5 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
         workdir: ./publish-worker
         # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
-        tag_names: true  
+        tag_names: true
         tag_name_skip: service-
-    - name: Restart service
-      uses: swisschain/kube-restart-pods@master
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-        NAMESPACE: lykke
-        POD: antares-wallet-api

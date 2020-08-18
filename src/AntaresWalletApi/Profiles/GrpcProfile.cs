@@ -151,6 +151,10 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.SessionId, o => o.Ignore());
             CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>();
             CreateMap<BlockchainExplorerLinkResponse, ExplorerLinksResponse.Types.ExplorerLinkModel>();
+            CreateMap<HistoryResponseModel, AssetTradesResponse.Types.AssetTradeModel>()
+                .ForMember(d => d.AssetId, o => o.MapFrom(x => x.Asset))
+                .ForMember(d => d.AssetPairId, o => o.MapFrom(x => x.AssetPair))
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.DateTime));
         }
     }
 }
