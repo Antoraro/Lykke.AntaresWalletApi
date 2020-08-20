@@ -1492,6 +1492,8 @@ namespace AntaresWalletApi.GrpcServices
                         UpgradeRequest = _mapper.Map<UpgradeRequest>(response.Result.UpgradeRequest),
                         QuestionnaireAnswered = response.Result.QuestionnaireAnswered
                     };
+
+                    result.Result.NextTier?.Documents.AddRange(response.Result.NextTier?.Documents);
                 }
 
                 if (response.Error != null)
