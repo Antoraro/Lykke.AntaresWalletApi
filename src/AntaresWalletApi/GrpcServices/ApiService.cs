@@ -2519,6 +2519,112 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        public override async Task<AssetDisclaimersResponse> GetAssetDisclaimers(Empty request, ServerCallContext context)
+        {
+            var result = new AssetDisclaimersResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.GetAssetDisclaimersAsync(token);
+
+                if (response.Result != null)
+                {
+                    result.Result = new AssetDisclaimersResponse.Types.AssetDisclaimersPayload();
+
+                    foreach (var disclaimer in response.Result.Disclaimers)
+                    {
+                        var res = new AssetDisclaimer{Id = disclaimer.Id, Text = disclaimer.Text};
+                        result.Result.Disclaimers.Add(res);
+                    }
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<AssetDisclaimersResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<EmptyResponse> ApproveAssetDisclaimer(AssetDisclaimerRequest request, ServerCallContext context)
+        {
+            var result = new EmptyResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+
+                var response = await _walletApiV1Client.ApproveAssetDisclaimerAsync(request.DisclaimerId, token);
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<EmptyResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
+        public override async Task<EmptyResponse> DeclineAssetDisclaimer(AssetDisclaimerRequest request, ServerCallContext context)
+        {
+            var result = new EmptyResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+
+                var response = await _walletApiV1Client.DeclineAssetDisclaimerAsync(request.DisclaimerId, token);
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<EmptyResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
         public override Task GetPriceUpdates(PriceUpdatesRequest request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New price stream connect. peer:{context.Peer}");

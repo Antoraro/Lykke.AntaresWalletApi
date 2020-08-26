@@ -145,6 +145,13 @@ service ApiService {
     // GET /api/PrivateWallet
     rpc GetPrivateWallets(google.protobuf.Empty) returns (PrivateWalletsResponse);
 
+    // GET /api/AssetDisclaimers
+    rpc GetAssetDisclaimers(google.protobuf.Empty) returns (AssetDisclaimersResponse);
+    // GET /api/AssetDisclaimers/{disclaimerId}/approve"
+    rpc ApproveAssetDisclaimer(AssetDisclaimerRequest) returns (EmptyResponse);
+    // GET /api/AssetDisclaimers/{disclaimerId}/decline
+    rpc DeclineAssetDisclaimer(AssetDisclaimerRequest) returns (EmptyResponse);
+
     rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
     rpc GetCandleUpdates (CandleUpdatesRequest) returns (stream CandleUpdate);
     rpc GetOrderbookUpdates (OrderbookUpdatesRequest) returns (stream Orderbook);
@@ -465,6 +472,10 @@ message CryptoCashoutRequest {
     string volume = 2;
     string destinationAddress = 3;
     string destinationAddressExtension = 4;
+}
+
+message AssetDisclaimerRequest {
+    string disclaimerId = 1;
 }
 
 message CandleUpdatesRequest {
@@ -1136,6 +1147,20 @@ message PrivateWalletsResponse {
     message PrivateWalletsPayload {
         repeated PrivateWallet wallets = 1;
     }
+}
+
+message AssetDisclaimersResponse {
+    AssetDisclaimersPayload result = 1;
+    ErrorV1 error = 2;
+
+    message AssetDisclaimersPayload {
+        repeated AssetDisclaimer disclaimers = 1;
+    }
+}
+
+message AssetDisclaimer {
+    string id = 1;
+    string text = 2;
 }
 
 message PrivateWallet {
