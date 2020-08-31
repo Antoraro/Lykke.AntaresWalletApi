@@ -37,8 +37,6 @@ MyNoSqlServer:
     settings-key: MyNoSqlServer-TickersTableName
   OrderbooksTableName:
     settings-key: MyNoSqlServer-OrderbooksTableName
-  PublicTradesTableName:
-    settings-key: MyNoSqlServer-PublicTradesTableName
   SessionsTableName:
     settings-key: MyNoSqlServer-SessionsTableName
 RabbitMq:

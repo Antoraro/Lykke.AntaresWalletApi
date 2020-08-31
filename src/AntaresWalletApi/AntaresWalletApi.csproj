@@ -38,8 +38,10 @@
     <PackageReference Include="Lykke.Service.Registration.Contract" Version="1.8.0" />
     <PackageReference Include="Lykke.Service.Session.Client" Version="3.1.1" />
     <PackageReference Include="Lykke.Service.TradesAdapter.Client" Version="1.0.2" />
+    <PackageReference Include="Lykke.Service.TradesAdapter.Contract" Version="1.0.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.Redis" Version="2.2.0" />
     <PackageReference Include="MyNoSqlServer.DataWriter" Version="1.0.1" />
+    <PackageReference Include="Swisschain.RabbitMqBroker" Version="8.2.0" />
     <PackageReference Include="Swisschain.Sdk.Server" Version="6.3.1" />
     <PackageReference Include="MyNoSqlServer.DataReader" Version="1.0.1" />
     <PackageReference Include="Swisschain.LykkeLog.Adapter" Version="1.1.0" />

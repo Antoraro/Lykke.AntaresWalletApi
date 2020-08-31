@@ -72,7 +72,7 @@ namespace AntaresWalletApi.Profiles
             CreateMap<OrderbookEntity, Orderbook>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
 
-            CreateMap<PublicTradeEntity, PublicTrade>(MemberList.Destination);
+            CreateMap<Lykke.Service.TradesAdapter.Contract.Trade, PublicTrade>(MemberList.Destination);
 
             CreateMap<VolumePriceEntity, Orderbook.Types.PriceVolume>(MemberList.Destination)
                 .ForMember(d => d.V, o => o.MapFrom(x => x.Volume))

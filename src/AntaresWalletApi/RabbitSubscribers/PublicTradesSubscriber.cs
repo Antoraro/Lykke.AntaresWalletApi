@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
+using AntaresWalletApi.Services;
 using Autofac;
 using AutoMapper;
 using JetBrains.Annotations;
@@ -10,16 +10,16 @@ using Lykke.Common.Log;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Service.TradesAdapter.Contract;
-using MyNoSqlServer.Abstractions;
+using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 
-namespace AntaresWalletApi.Worker.RabbitSubscribers
+namespace AntaresWalletApi.RabbitSubscribers
 {
     [UsedImplicitly]
     public class PublicTradesSubscriber : IStartable, IDisposable
     {
         private readonly string _connectionString;
         private readonly string _exchangeName;
-        private readonly IMyNoSqlServerDataWriter<PublicTradeEntity> _publicTradesWriter;
+        private readonly PublicTradesStreamService _publicTradesStreamService;
         private readonly IMapper _mapper;
         private readonly ILogFactory _logFactory;
         private RabbitMqSubscriber<List<Trade>> _subscriber;
@@ -27,13 +27,13 @@ namespace AntaresWalletApi.Worker.RabbitSubscribers
         public PublicTradesSubscriber(
             string connectionString,
             string exchangeName,
-            IMyNoSqlServerDataWriter<PublicTradeEntity> publicTradesWriter,
+            PublicTradesStreamService publicTradesStreamService,
             IMapper mapper,
             ILogFactory logFactory)
         {
             _connectionString = connectionString;
             _exchangeName = exchangeName;
-            _publicTradesWriter = publicTradesWriter;
+            _publicTradesStreamService = publicTradesStreamService;
             _mapper = mapper;
             _logFactory = logFactory;
         }
@@ -41,7 +41,7 @@ namespace AntaresWalletApi.Worker.RabbitSubscribers
         public void Start()
         {
             var settings = RabbitMqSubscriptionSettings
-                .ForSubscriber(_connectionString, _exchangeName, $"antares-api-{nameof(PublicTradesSubscriber)}");
+                .ForSubscriber(_connectionString, _exchangeName, $"antares-api-{nameof(PublicTradesSubscriber)}-{Environment.MachineName}");
 
             settings.DeadLetterExchangeName = null;
 
@@ -59,14 +59,17 @@ namespace AntaresWalletApi.Worker.RabbitSubscribers
             if (!message.Any())
                 return;
 
-            var trades = _mapper.Map<List<PublicTradeEntity>>(message);
+            var tradesByAssetId = message.GroupBy(x => x.AssetPairId);
+            var tasks = new List<Task>();
 
-            await _publicTradesWriter.BulkInsertOrReplaceAsync(trades);
-
-            Task.Run(async () =>
+            foreach (var tradeByAsset in tradesByAssetId)
             {
-                await _publicTradesWriter.CleanAndKeepMaxPartitions(0);
-            });
+                var tradesUpdate = new PublicTradeUpdate();
+                tradesUpdate.Trades.AddRange( _mapper.Map<List<PublicTrade>>(tradeByAsset.ToList()));
+                tasks.Add(_publicTradesStreamService.WriteToStreamAsync(tradesUpdate, tradeByAsset.Key));
+            }
+
+            await Task.WhenAll(tasks);
         }
 
         public void Dispose()

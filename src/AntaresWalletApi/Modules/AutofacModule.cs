@@ -4,6 +4,7 @@ using AntaresWalletApi.Common;
 using AntaresWalletApi.Common.Configuration;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using AntaresWalletApi.Infrastructure.Authentication;
+using AntaresWalletApi.RabbitSubscribers;
 using AntaresWalletApi.Services;
 using Autofac;
 using Lykke.ApiClients.V1;
@@ -112,11 +113,6 @@ namespace AntaresWalletApi.Modules
                     _config.MyNoSqlServer.SessionsTableName);
             }).As<IMyNoSqlServerDataWriter<SessionEntity>>().SingleInstance();
 
-            builder.Register(ctx =>
-                new MyNoSqlReadRepository<PublicTradeEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
-                    _config.MyNoSqlServer.PublicTradesTableName)
-            ).As<IMyNoSqlServerDataReader<PublicTradeEntity>>().SingleInstance();
-
             builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
                 .WithParameter("jobPeriod", TimeSpan.FromSeconds(1))
@@ -186,6 +182,13 @@ namespace AntaresWalletApi.Modules
             builder.RegisterType<SessionService>()
                 .WithParameter(TypedParameter.From(_config.SessionLifetimeInMins))
                 .AsSelf()
+                .SingleInstance();
+
+            builder.RegisterType<PublicTradesSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.PublicTrades.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.PublicTrades.ExchangeName)
                 .SingleInstance();
         }
     }

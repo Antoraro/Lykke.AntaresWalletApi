@@ -20,12 +20,10 @@ namespace AntaresWalletApi.Services
         private readonly IMyNoSqlServerDataReader<CandleEntity> _candlesReader;
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
         private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbooksReader;
-        private readonly IMyNoSqlServerDataReader<PublicTradeEntity> _publicTradesReader;
         private readonly IMyNoSqlServerDataReader<SessionEntity> _sessionsReader;
         private readonly PricesStreamService _priceStream;
         private readonly CandlesStreamService _candlesStream;
         private readonly OrderbookStreamService _orderbookStream;
-        private readonly PublicTradesStreamService _publicTradesStream;
         private readonly IMapper _mapper;
 
         public ApplicationManager(
@@ -34,12 +32,10 @@ namespace AntaresWalletApi.Services
             IMyNoSqlServerDataReader<CandleEntity> candlesReader,
             IMyNoSqlServerDataReader<TickerEntity> tickersReader,
             IMyNoSqlServerDataReader<OrderbookEntity> orderbooksReader,
-            IMyNoSqlServerDataReader<PublicTradeEntity> publicTradesReader,
             IMyNoSqlServerDataReader<SessionEntity> sessionsReader,
             PricesStreamService priceStream,
             CandlesStreamService candlesStream,
             OrderbookStreamService orderbookStream,
-            PublicTradesStreamService publicTradesStream,
             IMapper mapper
             )
         {
@@ -48,12 +44,10 @@ namespace AntaresWalletApi.Services
             _candlesReader = candlesReader;
             _tickersReader = tickersReader;
             _orderbooksReader = orderbooksReader;
-            _publicTradesReader = publicTradesReader;
             _sessionsReader = sessionsReader;
             _priceStream = priceStream;
             _candlesStream = candlesStream;
             _orderbookStream = orderbookStream;
-            _publicTradesStream = publicTradesStream;
             _mapper = mapper;
         }
 
@@ -123,21 +117,6 @@ namespace AntaresWalletApi.Services
                     item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
                     item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
                     tasks.Add(_orderbookStream.WriteToStreamAsync(item, orderbook.AssetPairId));
-                }
-
-                Task.WhenAll(tasks).GetAwaiter().GetResult();
-            });
-
-            _publicTradesReader.SubscribeToChanges(trades =>
-            {
-                var tradesByAssetId = trades.GroupBy(x => x.AssetPairId);
-                var tasks = new List<Task>();
-
-                foreach (var tradeByAsset in tradesByAssetId)
-                {
-                    var tradesUpdate = new PublicTradeUpdate();
-                    tradesUpdate.Trades.AddRange( _mapper.Map<List<PublicTrade>>(tradeByAsset.ToList()));
-                    tasks.Add(_publicTradesStream.WriteToStreamAsync(tradesUpdate, tradeByAsset.Key));
                 }
 
                 Task.WhenAll(tasks).GetAwaiter().GetResult();
