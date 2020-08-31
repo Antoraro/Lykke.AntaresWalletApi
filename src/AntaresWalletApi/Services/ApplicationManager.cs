@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
 using Autofac;
 using AutoMapper;
@@ -60,23 +61,33 @@ namespace AntaresWalletApi.Services
         {
             _pricesReader.SubscribeToChanges(prices =>
             {
+                var tasks = new List<Task>();
+
                 foreach (var price in prices)
                 {
-                    _priceStream.WriteToStream(_mapper.Map<PriceUpdate>(price), price.AssetPairId);
+                    tasks.Add(_priceStream.WriteToStreamAsync(_mapper.Map<PriceUpdate>(price), price.AssetPairId));
                 }
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _candlesReader.SubscribeToChanges(candles =>
             {
+                var tasks = new List<Task>();
+
                 foreach (var candle in candles)
                 {
                     var key = $"{candle.AssetPairId}_{candle.PriceType}_{candle.TimeInterval}";
-                    _candlesStream.WriteToStream(_mapper.Map<CandleUpdate>(candle), key);
+                    tasks.Add(_candlesStream.WriteToStreamAsync(_mapper.Map<CandleUpdate>(candle), key));
                 }
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _tickersReader.SubscribeToChanges(tickers =>
             {
+                var tasks = new List<Task>();
+
                 foreach (var ticker in tickers)
                 {
                     var priceEntity = _pricesReader.Get(PriceEntity.GetPk(), ticker.AssetPairId);
@@ -96,31 +107,40 @@ namespace AntaresWalletApi.Services
                         priceUpdate.Bid = priceEntity.Bid.ToString(CultureInfo.InvariantCulture);
                     }
 
-                    _priceStream.WriteToStream(priceUpdate, priceUpdate.AssetPairId);
+                    tasks.Add(_priceStream.WriteToStreamAsync(priceUpdate, priceUpdate.AssetPairId));
                 }
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _orderbooksReader.SubscribeToChanges(orderbooks =>
             {
+                var tasks = new List<Task>();
+
                 foreach (var orderbook in orderbooks)
                 {
                     var item = _mapper.Map<Orderbook>(orderbook);
                     item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
                     item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
-                    _orderbookStream.WriteToStream(item, orderbook.AssetPairId);
+                    tasks.Add(_orderbookStream.WriteToStreamAsync(item, orderbook.AssetPairId));
                 }
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _publicTradesReader.SubscribeToChanges(trades =>
             {
                 var tradesByAssetId = trades.GroupBy(x => x.AssetPairId);
+                var tasks = new List<Task>();
 
                 foreach (var tradeByAsset in tradesByAssetId)
                 {
                     var tradesUpdate = new PublicTradeUpdate();
                     tradesUpdate.Trades.AddRange( _mapper.Map<List<PublicTrade>>(tradeByAsset.ToList()));
-                    _publicTradesStream.WriteToStream(tradesUpdate, tradeByAsset.Key);
+                    tasks.Add(_publicTradesStream.WriteToStreamAsync(tradesUpdate, tradeByAsset.Key));
                 }
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _sessionsReader.SubscribeToChanges(sessions => { });

@@ -612,8 +612,8 @@ namespace AntaresWalletApi.GrpcServices
                 if (response.Result != null)
                 {
                     result.Result = _mapper.Map<RegisterResponse.Types.RegisterPayload>(response.Result);
-                    var session = await _sessionService.CreateVerifiedSessionAsync(response.Result.Token, request.PublicKey);
-                    result.Result.SessionId = session.Id;
+                    string sessionId = await _sessionService.CreateVerifiedSessionAsync(response.Result.Token, request.PublicKey);
+                    result.Result.SessionId = sessionId;
                 }
 
                 if (response.Error != null)
@@ -669,11 +669,11 @@ namespace AntaresWalletApi.GrpcServices
                     return result;
                 }
 
-                var session = await _sessionService.CreateSessionAsync(response.Token, request.PublicKey);
+                string sessionId = await _sessionService.CreateSessionAsync(response.Token, request.PublicKey);
 
                 result.Result = new LoginResponse.Types.LoginPayload
                 {
-                    SessionId = session.Id,
+                    SessionId = sessionId,
                     NotificationId = response.NotificationsId
                 };
 
@@ -760,6 +760,10 @@ namespace AntaresWalletApi.GrpcServices
                 {
                     result.Result = new VerifyLoginSmsResponse.Types.VerifyLoginSmsPayload{Passed = true};
                     session.Sms = true;
+
+                    if (session.Pin)
+                        session.Verified = true;
+
                     await _sessionService.SaveSessionAsync(session);
                 }
 
@@ -896,6 +900,31 @@ namespace AntaresWalletApi.GrpcServices
             }
 
             await _sessionService.ProlongateSessionAsync(session);
+
+            return result;
+        }
+
+        public override async Task<EmptyResponse> Logout(Empty request, ServerCallContext context)
+        {
+            var result = new EmptyResponse();
+
+            string sessionId = context.GetToken();
+
+            var session = _sessionService.GetSession(sessionId);
+
+            if (session == null)
+            {
+                result.Error = new ErrorV1
+                {
+                    Code = ErrorModelCode.InvalidInputField.ToString(),
+                    Message = ErrorMessages.InvalidFieldValue(nameof(sessionId)),
+                    Field = nameof(sessionId)
+                };
+
+                return result;
+            }
+
+            await _sessionService.LogoutAsync(session);
 
             return result;
         }
@@ -2625,7 +2654,7 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
-        public override Task GetPriceUpdates(PriceUpdatesRequest request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)
+        public override async Task GetPriceUpdates(PriceUpdatesRequest request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New price stream connect. peer:{context.Peer}");
 
@@ -2644,10 +2673,11 @@ namespace AntaresWalletApi.GrpcServices
                 CancelationToken = context.CancellationToken
             };
 
-            return _priceStreamService.RegisterStream(streamInfo, prices);
+            var task = await _priceStreamService.RegisterStreamAsync(streamInfo, prices);
+            await task;
         }
 
-        public override Task GetCandleUpdates(CandleUpdatesRequest request, IServerStreamWriter<CandleUpdate> responseStream, ServerCallContext context)
+        public override async Task GetCandleUpdates(CandleUpdatesRequest request, IServerStreamWriter<CandleUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New candles stream connect. peer:{context.Peer}");
 
@@ -2659,7 +2689,8 @@ namespace AntaresWalletApi.GrpcServices
                 CancelationToken = context.CancellationToken
             };
 
-            return _candlesStreamService.RegisterStream(streamInfo);
+            var task = _candlesStreamService.RegisterStreamAsync(streamInfo);
+            await task;
         }
 
         public override async Task GetOrderbookUpdates(OrderbookUpdatesRequest request,
@@ -2688,7 +2719,8 @@ namespace AntaresWalletApi.GrpcServices
                 Peer = context.Peer
             };
 
-            await _orderbookStreamService.RegisterStream(streamInfo, orderbooks);
+            var task = await _orderbookStreamService.RegisterStreamAsync(streamInfo, orderbooks);
+            await task;
         }
 
         public override async Task GetPublicTradeUpdates(PublicTradesUpdatesRequest request,
@@ -2712,7 +2744,8 @@ namespace AntaresWalletApi.GrpcServices
                 Peer = context.Peer
             };
 
-            await _publicTradesStreamService.RegisterStream(streamInfo, new List<PublicTradeUpdate>{initData});
+            var task = await _publicTradesStreamService.RegisterStreamAsync(streamInfo, new List<PublicTradeUpdate>{initData});
+            await task;
         }
 
         private LoginResponse ValidateLoginRequest(LoginRequest request)

@@ -66,16 +66,13 @@ namespace AntaresWalletApi.Modules
                 })
                 .As<ILogFactory>();
 
-            builder.Register(ctx =>
-                {
-                    var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl,
-                        $"{ApplicationInformation.AppName}-{Environment.MachineName}");
-                    client.Start();
-                    return client;
-                })
+            var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl,
+                $"{ApplicationInformation.AppName}-{Environment.MachineName}");
+            client.Start();
+
+            builder.Register(ctx => client)
                 .AsSelf()
                 .SingleInstance();
-
 
             builder.Register(ctx =>
                     new MyNoSqlReadRepository<PriceEntity>(ctx.Resolve<MyNoSqlTcpClient>(),

@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
+using AntaresWalletApi.Common.Extensions;
 using Lykke.Service.Session.Client;
 using MyNoSqlServer.Abstractions;
 
@@ -28,17 +29,13 @@ namespace AntaresWalletApi.Services
 
         public SessionEntity GetSession(string sessionId)
         {
-            return _sessionsReader.Get(SessionEntity.GetPk(), sessionId);
+            return _sessionsReader.Get(SessionEntity.GetPk(), sessionId.ToSha256());
         }
 
-        public SessionEntity GenerateSession()
+        public async Task<string> CreateVerifiedSessionAsync(string token, string publicKey = null)
         {
-            return SessionEntity.Generate(_expirationTimeInMins);
-        }
-
-        public async Task<SessionEntity> CreateVerifiedSessionAsync(string token, string publicKey = null)
-        {
-            var session = SessionEntity.Generate(_expirationTimeInMins);
+            string sessionId = SessionEntity.GenerateSessionId();
+            var session = SessionEntity.Generate(_expirationTimeInMins, sessionId);
             session.Token = token;
             session.Verified = true;
             session.Sms = true;
@@ -50,12 +47,13 @@ namespace AntaresWalletApi.Services
             session.PartnerId = lykkeSession.PartnerId;
 
             await _sessionsWriter.InsertOrReplaceAsync(session);
-            return session;
+            return sessionId;
         }
 
-        public async Task<SessionEntity> CreateSessionAsync(string token, string publicKey = null)
+        public async Task<string> CreateSessionAsync(string token, string publicKey = null)
         {
-            var session = SessionEntity.Generate(_expirationTimeInMins);
+            string sessionId = SessionEntity.GenerateSessionId();
+            var session = SessionEntity.Generate(_expirationTimeInMins, sessionId);
             session.Token = token;
             session.PublicKey = publicKey;
 
@@ -64,7 +62,7 @@ namespace AntaresWalletApi.Services
             session.PartnerId = lykkeSession.PartnerId;
 
             await _sessionsWriter.InsertOrReplaceAsync(session);
-            return session;
+            return sessionId;
         }
 
         public ValueTask SaveSessionAsync(SessionEntity session)
@@ -76,6 +74,12 @@ namespace AntaresWalletApi.Services
         {
             session.ExpirationDate = DateTime.UtcNow.AddMinutes(_expirationTimeInMins);
             return _sessionsWriter.InsertOrReplaceAsync(session);
+        }
+
+        public async Task LogoutAsync(SessionEntity session)
+        {
+            await _sessionsWriter.DeleteAsync(session.PartitionKey, session.RowKey);
+            await _clientSessionsClient.DeleteSessionIfExistsAsync(session.Token);
         }
     }
 }

@@ -16,26 +16,29 @@ namespace AntaresWalletApi.Services
         {
         }
 
-        internal override void WriteStreamData(StreamData<PriceUpdate> streamData, PriceUpdate data)
+        internal override Task WriteStreamDataAsync(StreamData<PriceUpdate> streamData, PriceUpdate data)
         {
             _prices[data.AssetPairId] = data;
+            return Task.CompletedTask;
         }
 
         internal override Task ProcesJobAsync(List<StreamData<PriceUpdate>> streamList)
         {
+            var tasks = new List<Task>();
+
             foreach (var stream in streamList)
             {
                 var dataToSend = _prices.Values.Where(x => stream.Keys.Contains(x.AssetPairId, StringComparer.InvariantCultureIgnoreCase) || stream.Keys.Length == 0).ToList();
 
                 foreach (var data in dataToSend)
                 {
-                    WriteToStream(stream, data);
+                    tasks.Add(WriteToStreamAsync(stream, data));
                 }
             }
 
             _prices.Clear();
 
-            return Task.CompletedTask;
+            return Task.WhenAll(tasks);
         }
     }
 }

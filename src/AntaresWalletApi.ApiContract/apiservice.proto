@@ -50,6 +50,7 @@ service ApiService {
 
     rpc IsSessionExpired(CheckSessionRequest) returns (CheckSessionResponse);
     rpc ProlongateSession(google.protobuf.Empty) returns (EmptyResponse);
+    rpc Logout(google.protobuf.Empty) returns (EmptyResponse);
 
     // GET /api/offchain/limit/list
     rpc GetOrders (LimitOrdersRequest) returns (LimitOrdersResponse);

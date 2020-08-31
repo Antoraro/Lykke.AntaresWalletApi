@@ -1,4 +1,6 @@
 using System;
+using AntaresWalletApi.Common.Extensions;
+using Common;
 using MyNoSqlServer.Abstractions;
 
 namespace AntaresWalletApi.Common.Domain.MyNoSqlEntities
@@ -21,15 +23,16 @@ namespace AntaresWalletApi.Common.Domain.MyNoSqlEntities
         public DateTime? Expires { get; set; }
 
         public static string GetPk() => "Session";
+        public static string GenerateSessionId() => $"{Guid.NewGuid():N}{Guid.NewGuid():N}{Guid.NewGuid():N}";
 
-        public static SessionEntity Generate(int expirationInMins)
+        public static SessionEntity Generate(int expirationInMins, string id)
         {
-            string id = $"{Guid.NewGuid():N}{Guid.NewGuid():N}{Guid.NewGuid():N}";
+            var sessionId = id.ToSha256();
             return new SessionEntity
             {
                 PartitionKey = GetPk(),
-                RowKey = id,
-                Id = id,
+                RowKey = sessionId,
+                Id = sessionId,
                 ExpirationDate = DateTime.UtcNow.AddMinutes(expirationInMins)
             };
         }
