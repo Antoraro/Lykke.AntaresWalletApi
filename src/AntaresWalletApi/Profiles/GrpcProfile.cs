@@ -72,7 +72,8 @@ namespace AntaresWalletApi.Profiles
             CreateMap<OrderbookEntity, Orderbook>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
 
-            CreateMap<Lykke.Service.TradesAdapter.Contract.Trade, PublicTrade>(MemberList.Destination);
+            CreateMap<Lykke.Service.TradesAdapter.Contract.Trade, PublicTrade>(MemberList.Destination)
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.Action));
 
             CreateMap<VolumePriceEntity, Orderbook.Types.PriceVolume>(MemberList.Destination)
                 .ForMember(d => d.V, o => o.MapFrom(x => x.Volume))
@@ -149,7 +150,8 @@ namespace AntaresWalletApi.Profiles
             CreateMap<FundsResponseModel, FundsResponse.Types.FundsModel>();
             CreateMap<Lykke.ApiClients.V1.AccountsRegistrationResponseModel, RegisterResponse.Types.RegisterPayload>()
                 .ForMember(d => d.SessionId, o => o.Ignore());
-            CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>();
+            CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>()
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.Action));
             CreateMap<BlockchainExplorerLinkResponse, ExplorerLinksResponse.Types.ExplorerLinkModel>();
             CreateMap<HistoryResponseModel, AssetTradesResponse.Types.AssetTradeModel>()
                 .ForMember(d => d.AssetId, o => o.MapFrom(x => x.Asset))

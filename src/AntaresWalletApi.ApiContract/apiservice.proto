@@ -780,7 +780,7 @@ message PublicTrade {
     google.protobuf.Timestamp dateTime = 3;
     string volume = 4;
     string price = 5;
-    string action = 6;
+    string side = 6;
 }
 
 message WatchlistsResponse {
