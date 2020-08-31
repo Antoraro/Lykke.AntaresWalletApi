@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Threading;
 using AntaresWalletApi.Common;
 using AntaresWalletApi.Common.Configuration;
 using AntaresWalletApi.Common.Domain.MyNoSqlEntities;
@@ -67,11 +68,14 @@ namespace AntaresWalletApi.Modules
                 })
                 .As<ILogFactory>();
 
-            var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl,
-                $"{ApplicationInformation.AppName}-{Environment.MachineName}");
-            client.Start();
+            builder.Register(ctx =>
+                {
+                    var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl,
+                        $"{ApplicationInformation.AppName}-{Environment.MachineName}");
 
-            builder.Register(ctx => client)
+                    client.Start();
+                    return client;
+                })
                 .AsSelf()
                 .SingleInstance();
 
