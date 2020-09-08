@@ -133,6 +133,14 @@ namespace AntaresWalletApi.GrpcServices
             result.Categories.AddRange(_mapper.Map<List<AssetCategory>>(categories));
             result.Assets.AddRange(_mapper.Map<List<Asset>>(assets));
 
+            var popularAssetPairs = await _assetsHelper.GetPopularPairsAsync(assets.Select(x => x.Id).ToList());
+
+            foreach (var asset in result.Assets)
+            {
+                if (popularAssetPairs.ContainsKey(asset.Id))
+                    asset.PopularPairs.AddRange(popularAssetPairs[asset.Id]);
+            }
+
             return result;
         }
 
@@ -2253,6 +2261,46 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        public override async Task<CheckCryptoAddressResponse> IsCryptoAddressValid(CheckCryptoAddressRequest request, ServerCallContext context)
+        {
+            var result = new CheckCryptoAddressResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV1Client.HotWalletAddressesValidityAsync(request.AddressExtension,
+                    request.Address, request.AssetId, token);
+
+                if (response.Result != null)
+                {
+                    result.Result = new CheckCryptoAddressResponse.Types.CheckCryptoAddressPayload
+                    {
+                        IsValid = response.Result.IsValid
+                    };
+                }
+
+                if (response.Error != null)
+                {
+                    result.Error = _mapper.Map<ErrorV1>(response.Error);
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 500)
+                {
+                    result = JsonConvert.DeserializeObject<CheckCryptoAddressResponse>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
         public override async Task<SwiftCashoutInfoResponse> GetSwiftCashoutInfo(Empty request, ServerCallContext context)
         {
             var result = new SwiftCashoutInfoResponse();
@@ -2325,42 +2373,6 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
-        public override async Task<OffchainChannelKeyResponse> GetOffchainChannelKey(OffchainChannelKeyRequest request, ServerCallContext context)
-        {
-            var result = new OffchainChannelKeyResponse();
-
-            try
-            {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.GetOffchainChannelKeyAsync(request.AssetId, token);
-
-                if (response.Result != null)
-                {
-                    result.Result = _mapper.Map<OffchainChannelKeyResponse.Types.OffchainChannel>(response.Result);
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
-            }
-            catch (ApiExceptionV1 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                if (ex.StatusCode == 500)
-                {
-                    result = JsonConvert.DeserializeObject<OffchainChannelKeyResponse>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
-        }
-
         public override async Task<SwiftCashoutResponse> SwiftCashout(SwiftCashoutRequest request, ServerCallContext context)
         {
             var result = new SwiftCashoutResponse();
@@ -2372,7 +2384,27 @@ namespace AntaresWalletApi.GrpcServices
 
                 if (response.Result != null)
                 {
-                    result.Result = _mapper.Map<SwiftCashoutResponse.Types.SwiftCashoutData>(response.Result);
+                    var finalizeResponse =
+                        await _walletApiV1Client.OffchainFinalizeAsync(new OffchainFinalizeModel
+                        {
+                            TransferId = response.Result.TransferId,
+                            ClientRevokePubKey = response.Result.TransferId,
+                            ClientRevokeEncryptedPrivateKey = response.Result.TransferId,
+                            SignedTransferTransaction = response.Result.TransferId
+                        }, token);
+
+                    if (finalizeResponse.Result != null)
+                    {
+                        result.Result = new SwiftCashoutResponse.Types.SwiftCashoutData
+                        {
+                            TransferId = finalizeResponse.Result.TransferId
+                        };
+                    }
+
+                    if (response.Error != null)
+                    {
+                        result.Error = _mapper.Map<ErrorV1>(response.Error);
+                    }
                 }
 
                 if (response.Error != null)
@@ -2390,42 +2422,6 @@ namespace AntaresWalletApi.GrpcServices
                 if (ex.StatusCode == 500)
                 {
                     result = JsonConvert.DeserializeObject<SwiftCashoutResponse>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
-        }
-
-        public override async Task<SwiftCashoutFinalizeResponse> FinalizeSwiftCashout(SwiftCashoutFinalizeRequest request, ServerCallContext context)
-        {
-            var result = new SwiftCashoutFinalizeResponse();
-
-            try
-            {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.OffchainFinalizeAsync(_mapper.Map<OffchainFinalizeModel>(request), token);
-
-                if (response.Result != null)
-                {
-                    result.Result = _mapper.Map<SwiftCashoutFinalizeResponse.Types.OffchainTradeRespone>(response.Result);
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
-            }
-            catch (ApiExceptionV1 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                if (ex.StatusCode == 500)
-                {
-                    result = JsonConvert.DeserializeObject<SwiftCashoutFinalizeResponse>(ex.Response);
                     return result;
                 }
 

@@ -34,12 +34,18 @@ namespace AntaresWalletApi.Profiles
                 return Timestamp.FromDateTime(date);
             });
             CreateMap<DateTimeOffset, Timestamp>().ConvertUsing((dt, timestamp) => Timestamp.FromDateTime(dt.UtcDateTime));
+            CreateMap<string, Timestamp>().ConvertUsing((str, timestamp) =>
+            {
+                var date = DateTime.SpecifyKind(DateTime.Parse(str, CultureInfo.InvariantCulture), DateTimeKind.Utc);
+                return Timestamp.FromDateTime(date);
+            });
 
             CreateMap<Lykke.Service.Assets.Client.Models.Asset, Asset>(MemberList.Destination)
                 .ForMember(d => d.CardDeposit, o => o.MapFrom(x => x.BankCardsDepositEnabled))
                 .ForMember(d => d.SwiftDeposit, o => o.MapFrom(x => x.SwiftDepositEnabled))
                 .ForMember(d => d.BlockchainDeposit, o => o.MapFrom(x => x.BlockchainDepositEnabled))
-                .ForMember(d => d.CanBeBase, o => o.MapFrom(x => x.IsBase));
+                .ForMember(d => d.CanBeBase, o => o.MapFrom(x => x.IsBase))
+                .ForMember(d => d.PopularPairs, o => o.Ignore());
 
             CreateMap<Lykke.Service.Assets.Client.Models.AssetCategory, AssetCategory>(MemberList.Destination)
                 .ForMember(d => d.IconUrl, o => o.MapFrom(x => x.AndroidIconUrl));
@@ -107,7 +113,16 @@ namespace AntaresWalletApi.Profiles
             CreateMap<BankCardPaymentUrlRequest, BankCardPaymentUrlInputModel>()
                 .ForMember(d => d.WalletId, o => o.Ignore())
                 .ForMember(d => d.OkUrl, o => o.Ignore())
-                .ForMember(d => d.FailUrl, o => o.Ignore());
+                .ForMember(d => d.FailUrl, o => o.Ignore())
+                .ForMember(d => d.FirstName, o => o.Ignore())
+                .ForMember(d => d.LastName, o => o.Ignore())
+                .ForMember(d => d.City, o => o.Ignore())
+                .ForMember(d => d.Zip, o => o.Ignore())
+                .ForMember(d => d.Address, o => o.Ignore())
+                .ForMember(d => d.Country, o => o.Ignore())
+                .ForMember(d => d.Email, o => o.Ignore())
+                .ForMember(d => d.Phone, o => o.Ignore())
+                .ForMember(d => d.DepositOption, o => o.MapFrom(x => "BankCard"));
 
             CreateMap<CountryItem, Country>();
             CreateMap<EthereumAssetResponse, EthereumSettingsResponse.Types.EthereumSettings>();
@@ -120,12 +135,9 @@ namespace AntaresWalletApi.Profiles
             CreateMap<WithdrawalCryptoInfoModel, WithdrawalCryptoInfoResponse.Types.WithdrawalCryptoInfo>();
             CreateMap<CashoutSwiftLastDataResponse, SwiftCashoutInfoResponse.Types.SwiftCashoutInfo>();
             CreateMap<CashoutSwiftFeeResponse, SwiftCashoutFeeResponse.Types.SwiftCashoutFee>();
-            CreateMap<OffchainEncryptedKeyRespModel, OffchainChannelKeyResponse.Types.OffchainChannel>();
-            CreateMap<SwiftCashoutRequest, OffchainCashoutSwiftModel>();
+            CreateMap<SwiftCashoutRequest, OffchainCashoutSwiftModel>()
+                .ForMember(d => d.PrevTempPrivateKey, o => o.Ignore());
             CreateMap<OffchainTradeRespModel, SwiftCashoutResponse.Types.SwiftCashoutData>();
-            CreateMap<SwiftCashoutFinalizeRequest, OffchainFinalizeModel>();
-            CreateMap<OffchainSuccessTradeRespModel, SwiftCashoutFinalizeResponse.Types.OffchainTradeRespone>();
-            CreateMap<ApiOffchainOrder, SwiftCashoutFinalizeResponse.Types.OffchainOrder>();
 
             CreateMap<ApiAppSettingsModel, AppSettingsResponse.Types.AppSettingsData>();
             CreateMap<ApiAssetModel, AppSettingsResponse.Types.ApiAsset>();

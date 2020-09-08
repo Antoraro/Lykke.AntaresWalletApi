@@ -126,17 +126,14 @@ service ApiService {
     rpc GetCryptoDepositAddress(CryptoDepositAddressRequest) returns (CryptoDepositAddressResponse);
     // GET (v2) /api/withdrawals/crypto/{assetId}/info
     rpc GetWithdrawalCryptoInfo(WithdrawalCryptoInfoRequest) returns (WithdrawalCryptoInfoResponse);
+    // GET /api/HotWallet/addresses/{address}/{asset}/validity
+    rpc IsCryptoAddressValid(CheckCryptoAddressRequest) returns (CheckCryptoAddressResponse);
 
     // GET /api/offchain/cashout/swift
     rpc GetSwiftCashoutInfo(google.protobuf.Empty) returns (SwiftCashoutInfoResponse);
     // GET /api/offchain/cashout/swift/fee/{assetId}/{countryCode}
     rpc GetSwiftCashoutFee(SwiftCashoutFeeRequest) returns (SwiftCashoutFeeResponse);
-    // GET /api/Offchain/channelkey?asset={assetId}
-    rpc GetOffchainChannelKey(OffchainChannelKeyRequest) returns (OffchainChannelKeyResponse);
-    // POST /api/offchain/cashout/swift
     rpc SwiftCashout(SwiftCashoutRequest) returns (SwiftCashoutResponse);
-    // POST /api/Offchain/finalizetransfer
-    rpc FinalizeSwiftCashout(SwiftCashoutFinalizeRequest) returns (SwiftCashoutFinalizeResponse);
     // POST /api/HotWallet/cashout
     rpc CryptoCashout(CryptoCashoutRequest) returns (EmptyResponse);
 
@@ -417,17 +414,8 @@ message BankTransferRequest {
 }
 
 message BankCardPaymentUrlRequest {
-    string address = 1;
-    string amount = 2;
-    string assetId = 3;
-    string city = 4;
-    string country = 5;
-    string email = 6;
-    string firstName = 7;
-    string lastName = 8;
-    string phone = 9;
-    string zip = 10;
-    string depositOption = 11;
+    string amount = 1;
+    string assetId = 2;
 }
 
 message CryptoDepositAddressRequest {
@@ -438,34 +426,28 @@ message WithdrawalCryptoInfoRequest {
     string assetId = 1;
 }
 
+message CheckCryptoAddressRequest {
+    string assetId = 1;
+    string address = 2;
+    string addressExtension = 3;
+}
+
 message SwiftCashoutFeeRequest {
     string assetId = 1;
     string countryCode = 2;
 }
 
-message OffchainChannelKeyRequest {
-    string assetId = 1;
-}
-
 message SwiftCashoutRequest {
     string amount = 1;
     string asset = 2;
-    string prevTempPrivateKey = 3;
-    string bic = 4;
-    string accNumber = 5;
-    string accName = 6;
-    string accHolderAddress = 7;
-    string bankName = 8;
-    string accHolderCountry = 9;
-    string accHolderZipCode = 10;
-    string accHolderCity = 11;
-}
-
-message SwiftCashoutFinalizeRequest {
-    string transferId = 1;
-    string clientRevokePubKey = 2;
-    string clientRevokeEncryptedPrivateKey = 3;
-    string signedTransferTransaction = 4;
+    string bic = 3;
+    string accNumber = 4;
+    string accName = 5;
+    string accHolderAddress = 6;
+    string bankName = 7;
+    string accHolderCountry = 8;
+    string accHolderZipCode = 9;
+    string accHolderCity = 10;
 }
 
 message CryptoCashoutRequest {
@@ -683,7 +665,7 @@ message PlaceOrderResponse {
 
 message OrderModel {
     string id = 1;
-    string dateTime = 2;
+    google.protobuf.Timestamp dateTime = 2;
     string orderType = 3;
     string volume = 4;
     string price = 5;
@@ -694,7 +676,7 @@ message OrderModel {
 
 message LimitOrderModel {
     string id = 1;
-    string dateTime = 2;
+    google.protobuf.Timestamp dateTime = 2;
     string orderType = 3;
     string volume = 4;
     string price = 5;
@@ -1018,6 +1000,15 @@ message EthereumSettingsResponse {
     }
 }
 
+message CheckCryptoAddressResponse {
+    CheckCryptoAddressPayload result = 1;
+    ErrorV1 error = 2;
+
+    message CheckCryptoAddressPayload {
+        bool isValid = 1;
+    }
+}
+
 message CryptoDepositAddressResponse {
     CryptoDepositAddress address = 1;
     ErrorV2 error = 2;
@@ -1056,48 +1047,12 @@ message SwiftCashoutInfoResponse {
     }
 }
 
-message OffchainChannelKeyResponse {
-    OffchainChannel result = 1;
-    ErrorV1 error = 2;
-
-    message OffchainChannel {
-        string key = 1;
-    }
-}
-
 message SwiftCashoutResponse{
     SwiftCashoutData result = 1;
     ErrorV1 error = 2;
 
     message SwiftCashoutData {
         string transferId = 1;
-        string transactionHex = 2;
-        string operationResult = 3;
-    }
-}
-
-message SwiftCashoutFinalizeResponse {
-    OffchainTradeRespone result = 1;
-    ErrorV1 error = 2;
-
-    message OffchainTradeRespone {
-        string transferId = 1;
-        string transactionHex = 2;
-        string operationResult = 3;
-        OffchainOrder order = 4;
-    }
-
-    message OffchainOrder {
-        string id = 1;
-        string dateTime = 2;
-        string orderType = 3;
-        string volume = 4;
-        string price = 5;
-        string asset = 6;
-        string assetPair = 7;
-        string totalCost = 8;
-        string remainingVolume = 9;
-        string remainingOtherVolume = 10;
     }
 }
 
@@ -1218,7 +1173,7 @@ message NextTier {
 
 message UpgradeRequest {
     string tier = 1;
-    string submitDate = 2;
+    google.protobuf.Timestamp submitDate = 2;
     string status = 3;
     string limit = 4;
 }
@@ -1246,6 +1201,7 @@ message Asset {
     bool isTrusted = 14;
     bool canBeBase = 15;
     string iconUrl = 16;
+    repeated string popularPairs = 17;
 }
 
 message AssetPair {
