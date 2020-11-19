@@ -21,14 +21,16 @@ service ApiService {
     rpc GetOrderbook (OrderbookRequest) returns (Orderbook);
     // GET (v2) /api/markets
     rpc GetMarkets (MarketsRequest) returns (MarketsResponse);
-    // GET	/api/Client/pendingActions
+    // GET /api/Client/pendingActions
     rpc GetPendingActions(google.protobuf.Empty) returns (PendingActionsResponse);
     rpc GetAmountInBaseAsset(AmountInBaseRequest) returns (AmountInBaseAssetResponse);
 
-    // GET	/api/PushSettings
+    // GET /api/PushSettings
     rpc GetPushSettings(google.protobuf.Empty) returns (PushSettingsResponse);
     // POST	/api/PushSettings
     rpc SetPushSettings(PushSettingsRequest) returns (EmptyResponse);
+    // POST (v2) /api/notifications/push
+    rpc RegisterPushNotifications(RegisterPushRequest) returns (RegisterPushResponse);
 
     // POST /api/Antares/email/send
     rpc SendVerificationEmail(VerificationEmailRequest) returns (VerificationEmailResponse);
@@ -167,6 +169,7 @@ message PricesRequest {
 message PriceUpdatesRequest {
     repeated string assetPairIds = 1;
 }
+
 message CandlesRequest {
     string assetPairId = 1;
     CandleType type = 2;
@@ -185,6 +188,16 @@ message AmountInBaseRequest {
 
 message PushSettingsRequest {
     bool enabled = 1;
+}
+
+message RegisterPushRequest {
+    MobileOsPlatform platform = 1;
+    string pushChannel = 2;
+}
+
+enum MobileOsPlatform {
+    Ios = 0;
+    Android = 1;
 }
 
 message VerificationEmailRequest {
@@ -578,6 +591,15 @@ message PushSettingsResponse {
 
     message PushSettingsPayload {
         bool enabled = 1;
+    }
+}
+
+message RegisterPushResponse {
+    InstallationPayload result = 1;
+    ErrorV2 error = 2;
+
+    message InstallationPayload {
+        string installationId = 1;
     }
 }
 

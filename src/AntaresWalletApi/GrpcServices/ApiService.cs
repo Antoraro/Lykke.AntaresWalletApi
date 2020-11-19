@@ -449,6 +449,45 @@ namespace AntaresWalletApi.GrpcServices
             }
         }
 
+        public override async Task<RegisterPushResponse> RegisterPushNotifications(RegisterPushRequest request, ServerCallContext context)
+        {
+            var result = new RegisterPushResponse();
+
+            try
+            {
+                var token = context.GetBearerToken();
+                var response = await _walletApiV2Client.RegisterInstallationAsync(new PushRegistrationModel
+                {
+                    InstallationId = Guid.NewGuid().ToString(),
+                    Platform = request.Platform == MobileOsPlatform.Ios ? PushRegistrationModelPlatform.Ios : PushRegistrationModelPlatform.Android,
+                    PushChannel = request.PushChannel
+                }, token);
+
+                if (response != null)
+                {
+                    result.Result = new RegisterPushResponse.Types.InstallationPayload
+                    {
+                        InstallationId = response.InstallationId
+                    };
+                }
+
+                return result;
+            }
+            catch (ApiExceptionV2 ex)
+            {
+                if (ex.StatusCode == 401)
+                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+
+                if (ex.StatusCode == 400)
+                {
+                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    return result;
+                }
+
+                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            }
+        }
+
         [AllowAnonymous]
         public override async Task<VerificationEmailResponse> SendVerificationEmail(VerificationEmailRequest request, ServerCallContext context)
         {
