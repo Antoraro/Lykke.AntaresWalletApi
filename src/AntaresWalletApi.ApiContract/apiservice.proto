@@ -1202,6 +1202,7 @@ message Asset {
     bool canBeBase = 15;
     string iconUrl = 16;
     repeated string popularPairs = 17;
+    bool blockchainWithdrawal = 18;
 }
 
 message AssetPair {
