@@ -70,6 +70,7 @@ namespace AntaresWalletApi.GrpcServices
         private readonly ITradesAdapterClient _tradesAdapterClient;
         private readonly IRegistrationServiceClient _registrationServiceClient;
         private readonly WalletApiConfig _walletApiConfig;
+        private readonly AppConfig _config;
         private readonly IMapper _mapper;
 
         public ApiService(
@@ -93,6 +94,7 @@ namespace AntaresWalletApi.GrpcServices
             ITradesAdapterClient tradesAdapterClient,
             IRegistrationServiceClient registrationServiceClient,
             WalletApiConfig walletApiConfig,
+            AppConfig config,
             IMapper mapper
         )
         {
@@ -116,6 +118,7 @@ namespace AntaresWalletApi.GrpcServices
             _tradesAdapterClient = tradesAdapterClient;
             _registrationServiceClient = registrationServiceClient;
             _walletApiConfig = walletApiConfig;
+            _config = config;
             _mapper = mapper;
         }
 
@@ -1729,6 +1732,22 @@ namespace AntaresWalletApi.GrpcServices
 
                 if (request.File.IsEmpty)
                     return result;
+
+                var maxSize = _config.MaxReceiveMessageSizeInMb * 1024 * 1024;
+
+                if (request.File.Length > maxSize)
+                {
+                    result.Error = new ErrorV1
+                    {
+                        Code = ErrorModelCode.InvalidInputField.ToString(),
+                        Message = ErrorMessages.TooBig(nameof(request.File),
+                            request.File.Length.ToString(),
+                            maxSize.ToString()),
+                        Field = nameof(request.File)
+                    };
+
+                    return result;
+                }
 
                 var provider = new FileExtensionContentTypeProvider();
                 if(!provider.TryGetContentType(request.Filename, out var contentType))

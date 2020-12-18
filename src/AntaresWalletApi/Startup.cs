@@ -67,6 +67,7 @@ namespace AntaresWalletApi
 
             services.AddGrpc(options =>
             {
+                options.MaxReceiveMessageSize = Config.MaxReceiveMessageSizeInMb * 1024 * 1024;
                 options.Interceptors.Add<LykkeTokenInterceptor>();
             });
 

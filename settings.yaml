@@ -1,5 +1,7 @@
 SessionLifetimeInMins:
   settings-key: AntaresWalletApi-SessionLifetimeInMins
+MaxReceiveMessageSizeInMb:
+  settings-key: AntaresWalletApi-MaxReceiveMessageSizeInMb
 Services:
   WalletApiv1Url:
     settings-key: WalletApiV1Url
