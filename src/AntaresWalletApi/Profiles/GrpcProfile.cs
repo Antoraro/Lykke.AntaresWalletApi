@@ -127,10 +127,6 @@ namespace AntaresWalletApi.Profiles
             CreateMap<CountryItem, Country>();
             CreateMap<EthereumAssetResponse, EthereumSettingsResponse.Types.EthereumSettings>();
             CreateMap<BitcoinFeeSettings, EthereumSettingsResponse.Types.BitcoinFee>();
-            CreateMap<CryptoDepositAddressRespModel, CryptoDepositAddressResponse.Types.CryptoDepositAddress>();
-
-            CreateMap<DepositAddressModel, GenerateWalletResponse.Types.WalletAddress>();
-            CreateMap<BcnAddressExtensionModel, GenerateWalletResponse.Types.BcnAddressExtension>();
 
             CreateMap<WithdrawalCryptoInfoModel, WithdrawalCryptoInfoResponse.Types.WithdrawalCryptoInfo>();
             CreateMap<CashoutSwiftLastDataResponse, SwiftCashoutInfoResponse.Types.SwiftCashoutInfo>();

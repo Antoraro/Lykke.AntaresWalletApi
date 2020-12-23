@@ -108,10 +108,6 @@ service ApiService {
     rpc GetWallets(google.protobuf.Empty) returns (WalletsResponse);
     // GET /api/Wallets/{assetId}
     rpc GetWallet(WalletRequest) returns (WalletResponse);
-    // POST /api/Wallets
-    rpc GenerateWallet(GenerateWalletRequest) returns (GenerateWalletResponse);
-    // POST (v2) t/api/Deposits/crypto/{assetId}/address
-    rpc GenerateWalletV2(GenerateWalletV2Request) returns (EmptyResponseV2);
     // GET /api/SwiftCredentials/{assetId}
     rpc GetSwiftCredentials(SwiftCredentialsRequest) returns (SwiftCredentialsResponse);
     // POST /api/BankTransferRequest
@@ -399,21 +395,6 @@ enum TierUpgrade {
 }
 
 message WalletRequest {
-    string assetId = 1;
-}
-
-message GenerateWalletRequest {
-    string assetId = 1;
-    BcnWalletRequest bcnWallet = 2;
-
-    message BcnWalletRequest {
-        string address = 1;
-        string encodedKey = 2;
-        string publicKey = 3;
-    }
-}
-
-message GenerateWalletV2Request {
     string assetId = 1;
 }
 
@@ -924,24 +905,6 @@ message WalletResponse {
     }
 }
 
-message GenerateWalletResponse {
-    WalletAddress result = 1;
-    ErrorV1 error = 2;
-
-    message WalletAddress {
-        string address = 1;
-        BcnAddressExtension addressExtension = 2;
-    }
-
-    message BcnAddressExtension {
-        string addressExtensionDisplayName = 1;
-        string baseAddressDisplayName = 2;
-        string depositAddressExtension = 3;
-        string typeForDeposit = 4;
-        string typeForWithdrawal = 5;
-    }
-}
-
 message SwiftCredentialsResponse {
     SwiftCredentials result = 1;
     ErrorV1 error = 2;
@@ -1037,8 +1000,7 @@ message CryptoDepositAddressResponse {
 
     message CryptoDepositAddress {
         string address = 1;
-        string baseAddress = 2;
-        string addressExtension = 3;
+        string tag = 2;
     }
 }
 
