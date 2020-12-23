@@ -3,6 +3,7 @@ using AntaresWalletApi.Extensions;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Lykke.ApiClients.V1;
+using Lykke.ApiClients.V2;
 using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 using ApiExceptionV1 = Lykke.ApiClients.V1.ApiException;
@@ -18,34 +19,48 @@ namespace AntaresWalletApi.GrpcServices
         public override async Task<CryptoDepositAddressResponse> GetCryptoDepositAddress(CryptoDepositAddressRequest request, ServerCallContext context)
         {
             var result = new CryptoDepositAddressResponse();
+            var token = context.GetBearerToken();
 
             try
             {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV2Client.GetCryptosDepositAddressesAsync(request.AssetId, token);
+                CryptoDepositAddressRespModel response;
+
+                try
+                {
+                    response = await _walletApiV2Client.GetCryptosDepositAddressesAsync(request.AssetId, token);
+                }
+                catch (ApiExceptionV2 ex)
+                {
+                    if (ex.StatusCode == 400)
+                    {
+                        var error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+
+                        if (error.Error == "BlockchainWalletDepositAddressNotGenerated")
+                        {
+                            var address = await GenerateAndGetAddressAsync(request.AssetId, token);
+
+                            if (address != null)
+                            {
+                                result.Address = address;
+                            }
+
+                            return result;
+                        }
+
+                        result.Error = error;
+                        return result;
+                    }
+
+                    throw;
+                }
 
                 if (response != null)
                 {
                     result.Address = new CryptoDepositAddressResponse.Types.CryptoDepositAddress
                     {
-                        Address = response.BaseAddress,
+                        Address = string.IsNullOrEmpty(response.BaseAddress) ? response.Address : response.BaseAddress,
                         Tag = response.AddressExtension ?? string.Empty
                     };
-                }
-                else
-                {
-
-                    await _walletApiV2Client.PostCryptosDepositAddressesAsync(request.AssetId, token);
-                    response = await _walletApiV2Client.GetCryptosDepositAddressesAsync(request.AssetId, token);
-
-                    if (response != null)
-                    {
-                        result.Address = new CryptoDepositAddressResponse.Types.CryptoDepositAddress
-                        {
-                            Address = response.BaseAddress,
-                            Tag = response.AddressExtension
-                        };
-                    }
                 }
 
                 return result;
@@ -55,7 +70,7 @@ namespace AntaresWalletApi.GrpcServices
                 if (ex.StatusCode == 401)
                     throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
 
-                if (ex.StatusCode == 400)
+                if (ex.StatusCode == 404 || ex.StatusCode == 500)
                 {
                     result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
                     return result;
@@ -214,5 +229,23 @@ namespace AntaresWalletApi.GrpcServices
         }
 
         #endregion
+
+        private async Task<CryptoDepositAddressResponse.Types.CryptoDepositAddress> GenerateAndGetAddressAsync(string assetId,
+            string token)
+        {
+            await _walletApiV2Client.PostCryptosDepositAddressesAsync(assetId, token);
+            var response = await _walletApiV2Client.GetCryptosDepositAddressesAsync(assetId, token);
+
+            if (response != null)
+            {
+                return new CryptoDepositAddressResponse.Types.CryptoDepositAddress
+                {
+                    Address = response.BaseAddress,
+                    Tag = response.AddressExtension
+                };
+            }
+
+            return null;
+        }
     }
 }
