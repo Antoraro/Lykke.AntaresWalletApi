@@ -29,7 +29,7 @@ namespace AntaresWalletApi.GrpcServices
                     result.Address = new CryptoDepositAddressResponse.Types.CryptoDepositAddress
                     {
                         Address = response.BaseAddress,
-                        Tag = response.AddressExtension
+                        Tag = response.AddressExtension ?? string.Empty
                     };
                 }
                 else
