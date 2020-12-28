@@ -719,11 +719,13 @@ message AssetTradesResponse {
 
     message AssetTradeModel {
         string id = 1;
-        string assetId = 2;
-        string assetPairId = 3;
-        string price = 4;
-        string amount = 5;
-        google.protobuf.Timestamp timestamp = 10;
+        string assetPairId = 2;
+        string baseAssetId = 3;
+        string quoteAssetId = 4;
+        string price = 5;
+        string baseVolume = 6;
+        string quoteVolume = 7;
+        google.protobuf.Timestamp timestamp = 8;
     }
 }
 

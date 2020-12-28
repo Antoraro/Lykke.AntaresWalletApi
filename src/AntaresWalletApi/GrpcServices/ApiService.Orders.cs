@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using AntaresWalletApi.Common.Domain;
 using AntaresWalletApi.Extensions;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Lykke.ApiClients.V1;
 using Lykke.ApiClients.V2;
 using Lykke.MatchingEngine.Connector.Models.Api;
+using Lykke.Service.Assets.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 using ApiExceptionV1 = Lykke.ApiClients.V1.ApiException;
 using ApiExceptionV2 = Lykke.ApiClients.V2.ApiException;
+using Enum = System.Enum;
 using LimitOrderModel = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderModel;
 using LimitOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderRequest;
 using MarketOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.MarketOrderRequest;
@@ -295,9 +299,48 @@ namespace AntaresWalletApi.GrpcServices
                     walletId, new List<string>{}, request.AssetId, null, request.Take, request.Skip,
                     token);
 
+                var assetPairs = await _assetsService.AssetPairGetAllAsync();
+
                 if (response != null)
                 {
-                    result.Trades.AddRange(_mapper.Map<List<AssetTradesResponse.Types.AssetTradeModel>>(response));
+                    foreach (var group in response.GroupBy(x => x.Id))
+                    {
+                        var pair = group.ToList();
+
+                        if (pair.Count == 0 || pair.Count != 2)
+                            continue;
+
+                        string assetPairId = pair[0].AssetPair;
+
+                        var assetPair = assetPairs.FirstOrDefault(x => x.Id == assetPairId);
+
+                        if (assetPair == null)
+                            continue;
+
+                        var assetTrade = new AssetTradesResponse.Types.AssetTradeModel
+                        {
+                            Id = pair[0].Id,
+                            AssetPairId = assetPairId,
+                            BaseAssetId = assetPair.BaseAssetId,
+                            QuoteAssetId = assetPair.QuotingAssetId,
+                            Price = pair[0].Price?.ToString() ?? string.Empty,
+                            Timestamp = Timestamp.FromDateTime(pair[0].DateTime.UtcDateTime)
+                        };
+
+                        foreach (var item in pair)
+                        {
+                            if (item.Asset == assetPair.BaseAssetId)
+                            {
+                                assetTrade.BaseVolume = item.Amount.ToString(CultureInfo.InvariantCulture);
+                            }
+                            else
+                            {
+                                assetTrade.QuoteVolume = item.Amount.ToString(CultureInfo.InvariantCulture);
+                            }
+                        }
+
+                        result.Trades.Add(assetTrade);
+                    }
                 }
 
                 return result;
