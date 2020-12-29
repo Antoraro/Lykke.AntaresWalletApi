@@ -32,12 +32,14 @@ namespace AntaresWalletApi.GrpcServices
 
             var assets = await _assetsHelper.GetAssetsAvailableToClientAsync(clientId, partnerId, true);
 
-            result.Categories.AddRange(_mapper.Map<List<AssetCategory>>(categories));
-            result.Assets.AddRange(_mapper.Map<List<Asset>>(assets));
+            result.Body = new AssetsDictionaryResponseBody();
+
+            result.Body.Categories.AddRange(_mapper.Map<List<AssetCategory>>(categories));
+            result.Body.Assets.AddRange(_mapper.Map<List<Asset>>(assets));
 
             var popularAssetPairs = await _assetsHelper.GetPopularPairsAsync(assets.Select(x => x.Id).ToList());
 
-            foreach (var asset in result.Assets)
+            foreach (var asset in result.Body.Assets)
             {
                 if (popularAssetPairs.ContainsKey(asset.Id))
                     asset.PopularPairs.AddRange(popularAssetPairs[asset.Id]);

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AntaresWalletApi.Common.Configuration;
 using AntaresWalletApi.GrpcServices;
+using AntaresWalletApi.Infrastructure;
 using AntaresWalletApi.Infrastructure.Authentication;
 using AntaresWalletApi.Modules;
 using Autofac;
@@ -69,6 +70,7 @@ namespace AntaresWalletApi
             {
                 options.MaxReceiveMessageSize = Config.MaxReceiveMessageSizeInMb * 1024 * 1024;
                 options.Interceptors.Add<LykkeTokenInterceptor>();
+                options.Interceptors.Add<ErrorInterceptor>();
             });
 
             services.AddGrpcReflection();

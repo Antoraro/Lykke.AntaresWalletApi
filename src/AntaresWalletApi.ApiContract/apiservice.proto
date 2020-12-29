@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "common.proto";
 
 option csharp_namespace = "Swisschain.Lykke.AntaresWalletApi.ApiContract";
 
@@ -499,8 +500,15 @@ message PricesResponse {
 }
 
 message AssetsDictionaryResponse {
-	repeated AssetCategory categories = 1;
-	repeated Asset assets = 2;
+    oneof result {
+        AssetsDictionaryResponseBody body = 1;
+        ErrorResponseBody error = 2;
+    }
+}
+
+message AssetsDictionaryResponseBody {
+    repeated AssetCategory categories = 1;
+    repeated Asset assets = 2;
 }
 
 message BaseAssetResponse {
@@ -523,7 +531,7 @@ message CandlesResponse {
 
 message BalancesResponse {
     repeated Balance payload = 1;
-    Error error = 2;
+    Error3 error = 2;
 }
 
 message MarketsResponse {
@@ -692,7 +700,7 @@ message LimitOrderModel {
 
 message CancelOrderResponse {
     bool payload = 1;
-    Error error = 2;
+    Error3 error = 2;
 }
 
 message TradesResponse {
@@ -1279,7 +1287,7 @@ message EmptyResponseV2 {
     ErrorV2 error = 1;
 }
 
-message Error {
+message Error3 {
     string message = 1;
     map<string, string> fields = 2;
 }

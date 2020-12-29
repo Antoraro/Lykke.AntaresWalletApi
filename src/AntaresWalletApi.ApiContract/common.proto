@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "Swisschain.Lykke.AntaresWalletApi.ApiContract";
+
+package antaresWallet;
+
+message ErrorResponseBody {
+    ErrorCode code = 1; //error code
+    string message = 2; //error message
+    map<string, string> fields = 3; //for validation errors
+    string data = 4; //json
+}
+
+enum ErrorCode {
+    Unknown = 0; //unknown error
+    InvalidField = 1; //validation error
+    Runtime = 500; //internal server error
+}

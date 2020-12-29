@@ -21,6 +21,7 @@
   <ItemGroup>
     <Protobuf Include="isalive.proto" />
     <Protobuf Include="apiservice.proto" />
+    <Protobuf Include="common.proto" />
   </ItemGroup>
 
 </Project>

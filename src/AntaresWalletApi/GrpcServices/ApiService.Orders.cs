@@ -134,7 +134,7 @@ namespace AntaresWalletApi.GrpcServices
                 {
                     return new CancelOrderResponse
                     {
-                        Error = new Error
+                        Error = new Error3
                         {
                             Message = result.Message
                         }
@@ -192,7 +192,7 @@ namespace AntaresWalletApi.GrpcServices
             {
                 return new CancelOrderResponse
                 {
-                    Error = new Error
+                    Error = new Error3
                     {
                         Message = ErrorMessages.MeNotAvailable
                     }
@@ -207,7 +207,7 @@ namespace AntaresWalletApi.GrpcServices
 
             return new CancelOrderResponse
             {
-                Error = new Error
+                Error = new Error3
                 {
                     Message = response.Message ?? response.Status.ToString()
                 }
@@ -222,7 +222,7 @@ namespace AntaresWalletApi.GrpcServices
             {
                 return new CancelOrderResponse
                 {
-                    Error = new Error
+                    Error = new Error3
                     {
                         Message = ErrorMessages.MeNotAvailable
                     }
@@ -237,7 +237,7 @@ namespace AntaresWalletApi.GrpcServices
 
             return new CancelOrderResponse
             {
-                Error = new Error
+                Error = new Error3
                 {
                     Message = response.Message ?? response.Status.ToString()
                 }
