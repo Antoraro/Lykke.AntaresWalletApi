@@ -14,5 +14,7 @@ message ErrorResponseBody {
 enum ErrorCode {
     Unknown = 0; //unknown error
     InvalidField = 1; //validation error
+    Unauthorized = 401; //unauthorized (invalid/expired token)
+    NotFound = 404;
     Runtime = 500; //internal server error
 }

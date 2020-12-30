@@ -12,7 +12,6 @@ using Lykke.ApiClients.V2;
 using Lykke.MatchingEngine.Connector.Models.Api;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.ClientAccount.Client.Models;
-using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 using ApiExceptionV1 = Lykke.ApiClients.V1.ApiException;
 using ApiExceptionV2 = Lykke.ApiClients.V2.ApiException;
@@ -28,103 +27,85 @@ namespace AntaresWalletApi.GrpcServices
     {
         public override async Task<LimitOrdersResponse> GetOrders(LimitOrdersRequest request, ServerCallContext context)
         {
-            try
+            var token = context.GetBearerToken();
+            var response = await _walletApiV1Client.OffchainLimitListAsync(request.AssetPairId, token);
+
+            var result = new LimitOrdersResponse();
+
+            if (response.Result != null)
             {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.OffchainLimitListAsync(request.AssetPairId, token);
-
-                var result = new LimitOrdersResponse();
-
-                if (response.Result != null)
-                {
-                    result.Result = new LimitOrdersResponse.Types.OrdersPayload();
-                    result.Result.Orders.AddRange(_mapper.Map<List<LimitOrderModel>>(response.Result.Orders));
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(result.Error);
-                }
-
-                return result;
+                result.Body = new LimitOrdersResponse.Types.Body();
+                result.Body.Orders.AddRange(_mapper.Map<List<LimitOrderModel>>(response.Result.Orders));
             }
-            catch (ApiExceptionV1 ex)
+
+            if (response.Error != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Error = response.Error.ToApiError();
             }
+
+            return result;
         }
 
         public override async Task<PlaceOrderResponse> PlaceLimitOrder(LimitOrderRequest request, ServerCallContext context)
         {
-            try
-            {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.HotWalletPlaceLimitOrderAsync(
-                    new HotWalletLimitOperation
-                    {
-                        AssetPair = request.AssetPairId,
-                        AssetId = request.AssetId,
-                        Price = request.Price,
-                        Volume = request.Volume
-                    },
-                    token,
-                    _walletApiConfig.Secret);
-
-                var result = new PlaceOrderResponse();
-
-                if (response.Result != null)
+            var token = context.GetBearerToken();
+            var response = await _walletApiV1Client.HotWalletPlaceLimitOrderAsync(
+                new HotWalletLimitOperation
                 {
-                    result = _mapper.Map<PlaceOrderResponse>(response);
-                }
+                    AssetPair = request.AssetPairId,
+                    AssetId = request.AssetId,
+                    Price = request.Price,
+                    Volume = request.Volume
+                },
+                token,
+                _walletApiConfig.Secret);
 
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
+            var result = new PlaceOrderResponse();
 
-                return result;
-            }
-            catch (ApiExceptionV1 ex)
+            if (response.Result != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Body = _mapper.Map<OrderModel>(response.Result.Order);
             }
+
+            if (response.Error != null)
+            {
+                result.Error = response.Error.ToApiError();
+            }
+
+            return result;
         }
 
         public override async Task<PlaceOrderResponse> PlaceMarketOrder(MarketOrderRequest request, ServerCallContext context)
         {
-            try
-            {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.HotWalletPlaceMarketOrderAsync(
-                    new HotWalletOperation
-                    {
-                        AssetPair = request.AssetPairId,
-                        AssetId = request.AssetId,
-                        Volume = request.Volume
-                    },
-                    token,
-                    _walletApiConfig.Secret);
+            var token = context.GetBearerToken();
+            var response = await _walletApiV1Client.HotWalletPlaceMarketOrderAsync(
+                new HotWalletOperation
+                {
+                    AssetPair = request.AssetPairId,
+                    AssetId = request.AssetId,
+                    Volume = request.Volume
+                },
+                token,
+                _walletApiConfig.Secret);
 
-                return _mapper.Map<PlaceOrderResponse>(response);
-            }
-            catch (ApiExceptionV1 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
+            var result = new PlaceOrderResponse();
 
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+            if (response.Result != null)
+            {
+                result.Body = _mapper.Map<OrderModel>(response.Result.Order);
             }
+
+            if (response.Error != null)
+            {
+                result.Error = response.Error.ToApiError();
+            }
+
+            return result;
         }
 
         public override async Task<CancelOrderResponse> CancelAllOrders(CancelOrdersRequest request, ServerCallContext context)
         {
-            MeResponseModel response = null;
+            MeResponseModel response;
 
             if (!string.IsNullOrEmpty(request.AssetPairId))
             {
@@ -132,13 +113,12 @@ namespace AntaresWalletApi.GrpcServices
 
                 if (result != null)
                 {
-                    return new CancelOrderResponse
+                    var res = new CancelOrderResponse
                     {
-                        Error = new Error3
-                        {
-                            Message = result.Message
-                        }
+                        Error = new ErrorResponseBody{Code = ErrorCode.InvalidField, Message = result.Message}
                     };
+
+                    res.Error.Fields.Add(result.FieldName, result.Message);
                 }
 
                 bool? isBuy;
@@ -177,9 +157,9 @@ namespace AntaresWalletApi.GrpcServices
             {
                 var orders = await GetOrders(new LimitOrdersRequest(), context);
 
-                if (orders.Result.Orders.Any())
+                if (orders.Body?.Orders.Any() ?? false)
                 {
-                    var orderIds = orders.Result.Orders.Select(x => x.Id).ToList();
+                    var orderIds = orders.Body.Orders.Select(x => x.Id).ToList();
                     response = await _matchingEngineClient.CancelLimitOrdersAsync(orderIds);
                 }
                 else
@@ -192,25 +172,22 @@ namespace AntaresWalletApi.GrpcServices
             {
                 return new CancelOrderResponse
                 {
-                    Error = new Error3
-                    {
-                        Message = ErrorMessages.MeNotAvailable
-                    }
+                    Error = new ErrorResponseBody{Code = ErrorCode.Runtime, Message = ErrorMessages.MeNotAvailable}
                 };
             }
 
             if (response.Status == MeStatusCodes.Ok)
                 return new CancelOrderResponse
                 {
-                    Payload = true
+                    Body = new CancelOrderResponse.Types.Body
+                    {
+                        Payload = true
+                    }
                 };
 
             return new CancelOrderResponse
             {
-                Error = new Error3
-                {
-                    Message = response.Message ?? response.Status.ToString()
-                }
+                Error = new ErrorResponseBody{Code = ErrorCode.Runtime, Message = response.Message ?? response.Status.ToString()}
             };
         }
 
@@ -222,25 +199,16 @@ namespace AntaresWalletApi.GrpcServices
             {
                 return new CancelOrderResponse
                 {
-                    Error = new Error3
-                    {
-                        Message = ErrorMessages.MeNotAvailable
-                    }
+                    Error = new ErrorResponseBody{Code = ErrorCode.Runtime, Message = ErrorMessages.MeNotAvailable}
                 };
             }
 
             if (response.Status == MeStatusCodes.Ok)
-                return new CancelOrderResponse
-                {
-                    Payload = true
-                };
+                return new CancelOrderResponse {Body = new CancelOrderResponse.Types.Body {Payload = true}};
 
             return new CancelOrderResponse
             {
-                Error = new Error3
-                {
-                    Message = response.Message ?? response.Status.ToString()
-                }
+                Error = new ErrorResponseBody{Code = ErrorCode.Runtime, Message = response.Message ?? response.Status.ToString()}
             };
         }
 
@@ -248,116 +216,86 @@ namespace AntaresWalletApi.GrpcServices
         {
             var result = new TradesResponse();
 
-            try
+            var token = context.GetBearerToken();
+            var wallets = await _clientAccountClient.Wallets.GetClientWalletsFilteredAsync(context.GetClientId(), WalletType.Trading);
+
+            var walletId = wallets.FirstOrDefault()?.Id;
+
+            var response = await _walletApiV2Client.GetTradesByWalletIdAsync(
+                walletId, request.AssetPairId, request.Take, request.Skip,
+                request.OptionalFromDateCase == TradesRequest.OptionalFromDateOneofCase.None ? (DateTimeOffset?) null : request.From.ToDateTimeOffset(),
+                request.OptionalToDateCase == TradesRequest.OptionalToDateOneofCase.None ? (DateTimeOffset?) null : request.To.ToDateTimeOffset(),
+                request.OptionalTradeTypeCase == TradesRequest.OptionalTradeTypeOneofCase.None ? null : (TradeType?)Enum.Parse(typeof(TradeType?), request.TradeType),
+                token);
+
+            if (response != null)
             {
-                var token = context.GetBearerToken();
-                var wallets = await _clientAccountClient.Wallets.GetClientWalletsFilteredAsync(context.GetClientId(), WalletType.Trading);
-
-                var walletId = wallets.FirstOrDefault()?.Id;
-
-                var response = await _walletApiV2Client.GetTradesByWalletIdAsync(
-                    walletId, request.AssetPairId, request.Take, request.Skip,
-                    request.OptionalFromDateCase == TradesRequest.OptionalFromDateOneofCase.None ? (DateTimeOffset?) null : request.From.ToDateTimeOffset(),
-                    request.OptionalToDateCase == TradesRequest.OptionalToDateOneofCase.None ? (DateTimeOffset?) null : request.To.ToDateTimeOffset(),
-                    request.OptionalTradeTypeCase == TradesRequest.OptionalTradeTypeOneofCase.None ? null : (TradeType?)Enum.Parse(typeof(TradeType?), request.TradeType),
-                    token);
-
-                if (response != null)
-                {
-                    result.Trades.AddRange(_mapper.Map<List<TradesResponse.Types.TradeModel>>(response));
-                }
-
-                return result;
+                result.Body = new TradesResponse.Types.Body();
+                result.Body.Trades.AddRange(_mapper.Map<List<TradesResponse.Types.TradeModel>>(response));
             }
-            catch (ApiExceptionV2 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
 
-                if (ex.StatusCode == 400)
-                {
-                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
+            return result;
         }
 
         public override async Task<AssetTradesResponse> GetAssetTrades(AssetTradesRequest request, ServerCallContext context)
         {
             var result = new AssetTradesResponse();
 
-            try
+            var token = context.GetBearerToken();
+            var wallets = await _clientAccountClient.Wallets.GetClientWalletsFilteredAsync(context.GetClientId(), WalletType.Trading);
+
+            var walletId = wallets.FirstOrDefault()?.Id;
+
+            var response = await _walletApiV2Client.GetByWalletIdAsync(
+                walletId, new List<string>{}, request.AssetId, null, request.Take, request.Skip,
+                token);
+
+            var assetPairs = await _assetsService.AssetPairGetAllAsync();
+
+            if (response != null)
             {
-                var token = context.GetBearerToken();
-                var wallets = await _clientAccountClient.Wallets.GetClientWalletsFilteredAsync(context.GetClientId(), WalletType.Trading);
-
-                var walletId = wallets.FirstOrDefault()?.Id;
-
-                var response = await _walletApiV2Client.GetByWalletIdAsync(
-                    walletId, new List<string>{}, request.AssetId, null, request.Take, request.Skip,
-                    token);
-
-                var assetPairs = await _assetsService.AssetPairGetAllAsync();
-
-                if (response != null)
+                foreach (var group in response.GroupBy(x => x.Id))
                 {
-                    foreach (var group in response.GroupBy(x => x.Id))
+                    var pair = group.ToList();
+
+                    if (pair.Count == 0 || pair.Count != 2)
+                        continue;
+
+                    string assetPairId = pair[0].AssetPair;
+
+                    var assetPair = assetPairs.FirstOrDefault(x => x.Id == assetPairId);
+
+                    if (assetPair == null)
+                        continue;
+
+                    var assetTrade = new AssetTradesResponse.Types.AssetTradeModel
                     {
-                        var pair = group.ToList();
+                        Id = pair[0].Id,
+                        AssetPairId = assetPairId,
+                        BaseAssetId = assetPair.BaseAssetId,
+                        QuoteAssetId = assetPair.QuotingAssetId,
+                        Price = pair[0].Price?.ToString() ?? string.Empty,
+                        Timestamp = Timestamp.FromDateTime(pair[0].DateTime.UtcDateTime)
+                    };
 
-                        if (pair.Count == 0 || pair.Count != 2)
-                            continue;
-
-                        string assetPairId = pair[0].AssetPair;
-
-                        var assetPair = assetPairs.FirstOrDefault(x => x.Id == assetPairId);
-
-                        if (assetPair == null)
-                            continue;
-
-                        var assetTrade = new AssetTradesResponse.Types.AssetTradeModel
+                    foreach (var item in pair)
+                    {
+                        if (item.Asset == assetPair.BaseAssetId)
                         {
-                            Id = pair[0].Id,
-                            AssetPairId = assetPairId,
-                            BaseAssetId = assetPair.BaseAssetId,
-                            QuoteAssetId = assetPair.QuotingAssetId,
-                            Price = pair[0].Price?.ToString() ?? string.Empty,
-                            Timestamp = Timestamp.FromDateTime(pair[0].DateTime.UtcDateTime)
-                        };
-
-                        foreach (var item in pair)
-                        {
-                            if (item.Asset == assetPair.BaseAssetId)
-                            {
-                                assetTrade.BaseVolume = item.Amount.ToString(CultureInfo.InvariantCulture);
-                            }
-                            else
-                            {
-                                assetTrade.QuoteVolume = item.Amount.ToString(CultureInfo.InvariantCulture);
-                            }
+                            assetTrade.BaseVolume = item.Amount.ToString(CultureInfo.InvariantCulture);
                         }
-
-                        result.Trades.Add(assetTrade);
+                        else
+                        {
+                            assetTrade.QuoteVolume = item.Amount.ToString(CultureInfo.InvariantCulture);
+                        }
                     }
+
+                    result.Body = new AssetTradesResponse.Types.Body();
+                    result.Body.Trades.Add(assetTrade);
                 }
-
-                return result;
             }
-            catch (ApiExceptionV2 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
 
-                if (ex.StatusCode == 400)
-                {
-                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
+            return result;
         }
 
         public override async Task<PublicTradesResponse> GetPublicTrades(PublicTradesRequest request, ServerCallContext context)
@@ -366,35 +304,36 @@ namespace AntaresWalletApi.GrpcServices
 
             if (string.IsNullOrEmpty(request.AssetPairId))
             {
-                result.Error = new ErrorV1
+
+                result.Error = new ErrorResponseBody
                 {
-                    Code = ErrorModelCode.InvalidInputField.ToString(),
-                    Field = nameof(request.AssetPairId),
-                    Message = $"{nameof(request.AssetPairId)} can't be empty"
+                    Code = ErrorCode.InvalidField,
+                    Message = ErrorMessages.CantBeEmpty(nameof(request.AssetPairId))
                 };
-                return result;
-            }
 
-            try
-            {
-                var response = await _tradesAdapterClient.GetTradesByAssetPairIdAsync(request.AssetPairId, request.Skip, request.Take);
-
-                if (response.Records != null)
-                {
-                    result.Result.AddRange(_mapper.Map<List<PublicTrade>>(response.Records));
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = new ErrorV1{Message = response.Error.Message};
-                }
+                result.Error.Fields.Add(nameof(request.AssetPairId), result.Error.Message);
 
                 return result;
             }
-            catch (Exception ex)
+
+            var response = await _tradesAdapterClient.GetTradesByAssetPairIdAsync(request.AssetPairId, request.Skip, request.Take);
+
+            if (response.Records != null)
             {
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Body = new PublicTradesResponse.Types.Body();
+                result.Body.Result.AddRange(_mapper.Map<List<PublicTrade>>(response.Records));
             }
+
+            if (response.Error != null)
+            {
+                result.Error = new ErrorResponseBody
+                {
+                    Code = ErrorCode.Runtime,
+                    Message = response.Error.Message
+                };
+            }
+
+            return result;
         }
     }
 }

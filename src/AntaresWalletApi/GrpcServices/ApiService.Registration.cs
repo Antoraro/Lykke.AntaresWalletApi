@@ -1,12 +1,9 @@
 ﻿using System.Threading.Tasks;
+using AntaresWalletApi.Extensions;
 using Grpc.Core;
 using Lykke.ApiClients.V1;
 using Microsoft.AspNetCore.Authorization;
-using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
-using Status = Grpc.Core.Status;
-using ApiExceptionV1 = Lykke.ApiClients.V1.ApiException;
-using ApiExceptionV2 = Lykke.ApiClients.V2.ApiException;
 
 namespace AntaresWalletApi.GrpcServices
 {
@@ -17,35 +14,19 @@ namespace AntaresWalletApi.GrpcServices
         {
             var result = new VerificationEmailResponse();
 
-            try
+            var response = await _walletApiV1Client.SendVerificationEmailAsync(new PostEmailModel{Email = request.Email});
+
+            if (response.Result != null)
             {
-                var response = await _walletApiV1Client.SendVerificationEmailAsync(new PostEmailModel{Email = request.Email});
-
-                if (response.Result != null)
-                {
-                    result.Result = new VerificationEmailResponse.Types.VerificationEmailPayload { Token = response.Result.Token };
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
+                result.Body = new VerificationEmailResponse.Types.Body { Token = response.Result.Token };
             }
-            catch (ApiExceptionV1 ex)
+
+            if (response.Error != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                if (ex.StatusCode == 500)
-                {
-                    result = JsonConvert.DeserializeObject<VerificationEmailResponse>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Error = response.Error.ToApiError();
             }
+
+            return result;
         }
 
         [AllowAnonymous]
@@ -53,30 +34,14 @@ namespace AntaresWalletApi.GrpcServices
         {
             var result = new EmptyResponse();
 
-            try
+            var response = await _walletApiV1Client.SendVerificationSmsAsync(new PostPhoneModel{PhoneNumber = request.Phone, Token = request.Token});
+
+            if (response.Error != null)
             {
-                var response = await _walletApiV1Client.SendVerificationSmsAsync(new PostPhoneModel{PhoneNumber = request.Phone, Token = request.Token});
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
+                result.Error = response.Error.ToApiError();
             }
-            catch (ApiExceptionV1 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
 
-                if (ex.StatusCode == 500)
-                {
-                    result = JsonConvert.DeserializeObject<EmptyResponse>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
+            return result;
         }
 
         [AllowAnonymous]
@@ -84,40 +49,24 @@ namespace AntaresWalletApi.GrpcServices
         {
             var result = new VerifyResponse();
 
-            try
+            var response = await _walletApiV1Client.VerifyEmailAsync(new VerifyEmailRequestModel
             {
-                var response = await _walletApiV1Client.VerifyEmailAsync(new VerifyEmailRequestModel
-                {
-                    Email = request.Email,
-                    Code = request.Code,
-                    Token = request.Token
-                });
+                Email = request.Email,
+                Code = request.Code,
+                Token = request.Token
+            });
 
-                if (response.Result != null)
-                {
-                    result.Result = new VerifyResponse.Types.VerifyPayload{ Passed = response.Result.Passed};
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
-            }
-            catch (ApiExceptionV1 ex)
+            if (response.Result != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                if (ex.StatusCode == 500)
-                {
-                    result = JsonConvert.DeserializeObject<VerifyResponse>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Body = new VerifyResponse.Types.Body{ Passed = response.Result.Passed};
             }
+
+            if (response.Error != null)
+            {
+                result.Error = response.Error.ToApiError();
+            }
+
+            return result;
         }
 
         [AllowAnonymous]
@@ -125,40 +74,24 @@ namespace AntaresWalletApi.GrpcServices
         {
             var result = new VerifyResponse();
 
-            try
+            var response = await _walletApiV1Client.VerifyPhoneAsync(new VerifyPhoneModel
             {
-                var response = await _walletApiV1Client.VerifyPhoneAsync(new VerifyPhoneModel
-                {
-                    PhoneNumber = request.Phone,
-                    Code = request.Code,
-                    Token = request.Token
-                });
+                PhoneNumber = request.Phone,
+                Code = request.Code,
+                Token = request.Token
+            });
 
-                if (response.Result != null)
-                {
-                    result.Result = new VerifyResponse.Types.VerifyPayload{ Passed = response.Result.Passed};
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
-            }
-            catch (ApiExceptionV1 ex)
+            if (response.Result != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                if (ex.StatusCode == 500)
-                {
-                    result = JsonConvert.DeserializeObject<VerifyResponse>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Body = new VerifyResponse.Types.Body{ Passed = response.Result.Passed};
             }
+
+            if (response.Error != null)
+            {
+                result.Error = response.Error.ToApiError();
+            }
+
+            return result;
         }
 
         [AllowAnonymous]
@@ -166,47 +99,31 @@ namespace AntaresWalletApi.GrpcServices
         {
             var result = new RegisterResponse();
 
-            try
+            var response = await _walletApiV1Client.RegisterAsync(new RegistrationModel
             {
-                var response = await _walletApiV1Client.RegisterAsync(new RegistrationModel
-                {
-                    FullName = request.FullName,
-                    Email = request.Email,
-                    Phone = request.Phone,
-                    Password = request.Password,
-                    Hint = request.Hint,
-                    CountryIso3Poa = request.CountryIso3Code,
-                    Pin = request.Pin,
-                    Token = request.Token
-                });
+                FullName = request.FullName,
+                Email = request.Email,
+                Phone = request.Phone,
+                Password = request.Password,
+                Hint = request.Hint,
+                CountryIso3Poa = request.CountryIso3Code,
+                Pin = request.Pin,
+                Token = request.Token
+            });
 
-                if (response.Result != null)
-                {
-                    result.Result = _mapper.Map<RegisterResponse.Types.RegisterPayload>(response.Result);
-                    string sessionId = await _sessionService.CreateVerifiedSessionAsync(response.Result.Token, request.PublicKey);
-                    result.Result.SessionId = sessionId;
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
-            }
-            catch (ApiExceptionV1 ex)
+            if (response.Result != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                if (ex.StatusCode == 500)
-                {
-                    result = JsonConvert.DeserializeObject<RegisterResponse>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Body = _mapper.Map<RegisterResponse.Types.Body>(response.Result);
+                string sessionId = await _sessionService.CreateVerifiedSessionAsync(response.Result.Token, request.PublicKey);
+                result.Body.SessionId = sessionId;
             }
+
+            if (response.Error != null)
+            {
+                result.Error = response.Error.ToApiError();
+            }
+
+            return result;
         }
     }
 }

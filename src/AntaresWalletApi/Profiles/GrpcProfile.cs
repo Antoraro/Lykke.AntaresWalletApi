@@ -91,11 +91,6 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.Reserved, o => o.MapFrom(x => x.Reserved))
                 .ForMember(d => d.AssetId, o => o.MapFrom(x => x.AssetId));
 
-            CreateMap<ErrorModel, ErrorV1>()
-                .ForMember(d => d.Details, o => o.Ignore());
-
-            CreateMap<ResponseModelOfHotWalletSuccessTradeRespModel, PlaceOrderResponse>();
-            CreateMap<HotWalletSuccessTradeRespModel, PlaceOrderResponse.Types.OrderPayload>();
             CreateMap<ApiHotWalletOrder, OrderModel>();
 
             CreateMap<ApiOffchainOrder, LimitOrderModel>();
@@ -105,11 +100,9 @@ namespace AntaresWalletApi.Profiles
             CreateMap<TierInfo, NextTier>();
             CreateMap<Lykke.ApiClients.V1.UpgradeRequest, UpgradeRequest>();
 
-            CreateMap<ApiWalletAssetModel, WalletsResponse.Types.WalletAsset>();
-
-            CreateMap<GetSwiftCredentialsModel, SwiftCredentialsResponse.Types.SwiftCredentials>();
-            CreateMap<BankCardPaymentUrlInputModel, BankCardPaymentDetailsResponse.Types.BankCardPaymentDetails>();
-            CreateMap<BankCardPaymentUrlResponceModel, BankCardPaymentUrlResponse.Types.BankCardPaymentUrl>();
+            CreateMap<GetSwiftCredentialsModel, SwiftCredentialsResponse.Types.Body>();
+            CreateMap<BankCardPaymentUrlInputModel, BankCardPaymentDetailsResponse.Types.Body>();
+            CreateMap<BankCardPaymentUrlResponceModel, BankCardPaymentUrlResponse.Types.Body>();
             CreateMap<BankCardPaymentUrlRequest, BankCardPaymentUrlInputModel>()
                 .ForMember(d => d.WalletId, o => o.Ignore())
                 .ForMember(d => d.OkUrl, o => o.Ignore())
@@ -125,22 +118,22 @@ namespace AntaresWalletApi.Profiles
                 .ForMember(d => d.DepositOption, o => o.MapFrom(x => "BankCard"));
 
             CreateMap<CountryItem, Country>();
-            CreateMap<EthereumAssetResponse, EthereumSettingsResponse.Types.EthereumSettings>();
+            CreateMap<EthereumAssetResponse, EthereumSettingsResponse.Types.Body>();
             CreateMap<BitcoinFeeSettings, EthereumSettingsResponse.Types.BitcoinFee>();
 
-            CreateMap<WithdrawalCryptoInfoModel, WithdrawalCryptoInfoResponse.Types.WithdrawalCryptoInfo>();
-            CreateMap<CashoutSwiftLastDataResponse, SwiftCashoutInfoResponse.Types.SwiftCashoutInfo>();
-            CreateMap<CashoutSwiftFeeResponse, SwiftCashoutFeeResponse.Types.SwiftCashoutFee>();
+            CreateMap<WithdrawalCryptoInfoModel, WithdrawalCryptoInfoResponse.Types.Body>();
+            CreateMap<CashoutSwiftLastDataResponse, SwiftCashoutInfoResponse.Types.Body>();
+            CreateMap<CashoutSwiftFeeResponse, SwiftCashoutFeeResponse.Types.Body>();
             CreateMap<SwiftCashoutRequest, OffchainCashoutSwiftModel>()
                 .ForMember(d => d.PrevTempPrivateKey, o => o.Ignore());
-            CreateMap<OffchainTradeRespModel, SwiftCashoutResponse.Types.SwiftCashoutData>();
+            CreateMap<OffchainTradeRespModel, SwiftCashoutResponse.Types.Body>();
 
-            CreateMap<ApiAppSettingsModel, AppSettingsResponse.Types.AppSettingsData>();
+            CreateMap<ApiAppSettingsModel, AppSettingsResponse.Types.Body>();
             CreateMap<ApiAssetModel, AppSettingsResponse.Types.ApiAsset>();
             CreateMap<ApiRefundSettings, AppSettingsResponse.Types.ApiRefundSettings>();
             CreateMap<ApiFeeSettings, AppSettingsResponse.Types.ApiFeeSettings>();
             CreateMap<Lykke.ApiClients.V1.CashOutFee, Swisschain.Lykke.AntaresWalletApi.ApiContract.CashOutFee>();
-            CreateMap<ApiWalletAssetModel, WalletResponse.Types.WalletPayload>();
+            CreateMap<ApiWalletAssetModel, WalletResponse.Types.Body>();
             CreateMap<ApiPrivateWallet, PrivateWallet>();
             CreateMap<ApiBalanceRecord, BalanceRecord>();
             CreateMap<CryptoCashoutRequest, HotWalletCashoutOperation>();
@@ -148,15 +141,15 @@ namespace AntaresWalletApi.Profiles
 
             CreateMap<TradeResponseModel, TradesResponse.Types.TradeModel>();
             CreateMap<MarketSlice, MarketsResponse.Types.MarketModel>();
-            CreateMap<PendingActionsModel, PendingActionsResponse.Types.PendingActionsPayload>();
+            CreateMap<PendingActionsModel, PendingActionsResponse.Types.Body>();
             CreateMap<Lykke.ApiClients.V1.ApiPersonalDataModel, PersonalData>();
-            CreateMap<DocumentModel, KycDocumentsResponse.Types.KycDocument>();
-            CreateMap<FileModel, KycDocumentsResponse.Types.KycFile>();
+            CreateMap<DocumentModel, KycDocument>();
+            CreateMap<FileModel, KycFile>();
             CreateMap<QuestionModel, QuestionnaireResponse.Types.Question>();
             CreateMap<AnswerModel, QuestionnaireResponse.Types.Answer>();
             CreateMap<AnswersRequest.Types.Choice, ChoiceModel>();
             CreateMap<FundsResponseModel, FundsResponse.Types.FundsModel>();
-            CreateMap<Lykke.ApiClients.V1.AccountsRegistrationResponseModel, RegisterResponse.Types.RegisterPayload>()
+            CreateMap<Lykke.ApiClients.V1.AccountsRegistrationResponseModel, RegisterResponse.Types.Body>()
                 .ForMember(d => d.SessionId, o => o.Ignore());
             CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>()
                 .ForMember(d => d.Side, o => o.MapFrom(x => x.Action));

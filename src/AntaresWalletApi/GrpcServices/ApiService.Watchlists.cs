@@ -15,169 +15,121 @@ namespace AntaresWalletApi.GrpcServices
     {
         public override async Task<WatchlistsResponse> GetWatchlists(Empty request, ServerCallContext context)
         {
-            try
+            var token = context.GetBearerToken();
+            var response = await _walletApiV1Client.WatchListsGetListAsync(token);
+
+            var result = new WatchlistsResponse();
+
+            if (response.Result != null)
             {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.WatchListsGetListAsync(token);
+                result.Body = new WatchlistsResponse.Types.Body();
 
-                var result = new WatchlistsResponse();
-
-                if (response.Result != null)
+                foreach (var watchlist in response.Result)
                 {
-                    foreach (var watchlist in response.Result)
-                    {
-                        var list = _mapper.Map<Watchlist>(watchlist);
-                        list.AssetIds.AddRange(watchlist.AssetIds);
+                    var list = _mapper.Map<Watchlist>(watchlist);
+                    list.AssetIds.AddRange(watchlist.AssetIds);
 
-                        result.Result.Add(list);
-                    }
+                    result.Body.Result.Add(list);
                 }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
             }
-            catch (ApiExceptionV1 ex)
+
+            if (response.Error != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Error = response.Error.ToApiError();
             }
+
+            return result;
         }
 
         public override async Task<WatchlistResponse> GetWatchlist(WatchlistRequest request, ServerCallContext context)
         {
-            try
+            var token = context.GetBearerToken();
+            var response = await _walletApiV1Client.WatchListsGetAsync(request.Id, token);
+
+            var result = new WatchlistResponse();
+
+            if (response.Result != null)
             {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.WatchListsGetAsync(request.Id, token);
-
-                var result = new WatchlistResponse();
-
-                if (response.Result != null)
-                {
-                    result.Result = _mapper.Map<Watchlist>(response.Result);
-                    result.Result.AssetIds.AddRange(response.Result.AssetIds);
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
+                result.Body = _mapper.Map<Watchlist>(response.Result);
+                result.Body.AssetIds.AddRange(response.Result.AssetIds);
             }
-            catch (ApiExceptionV1 ex)
+
+            if (response.Error != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Error = response.Error.ToApiError();
             }
+
+            return result;
         }
 
         public override async Task<WatchlistResponse> AddWatchlist(AddWatchlistRequest request, ServerCallContext context)
         {
-            try
+            var token = context.GetBearerToken();
+            var response = await _walletApiV1Client.WatchListsCreateAsync(
+            new CustomWatchListCreateModel
             {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.WatchListsCreateAsync(
-                new CustomWatchListCreateModel
+                Name = request.Name,
+                Order = request.Order,
+                AssetIds = request.AssetIds.ToList()
+            }, token);
+
+            var result = new WatchlistResponse();
+
+            if (response.Result != null)
+            {
+                result.Body = _mapper.Map<Watchlist>(response.Result);
+                result.Body.AssetIds.AddRange(response.Result.AssetIds);
+            }
+
+            if (response.Error != null)
+            {
+                result.Error = response.Error.ToApiError();
+            }
+
+            return result;
+        }
+
+        public override async Task<WatchlistResponse> UpdateWatchlist(UpdateWatchlistRequest request, ServerCallContext context)
+        {
+            var token = context.GetBearerToken();
+            var response = await _walletApiV1Client.WatchListsUpdateAsync(
+                request.Id,
+                new CustomWatchListUpdateModel
                 {
                     Name = request.Name,
                     Order = request.Order,
                     AssetIds = request.AssetIds.ToList()
                 }, token);
 
-                var result = new WatchlistResponse();
+            var result = new WatchlistResponse();
 
-                if (response.Result != null)
-                {
-                    result.Result = _mapper.Map<Watchlist>(response.Result);
-                    result.Result.AssetIds.AddRange(response.Result.AssetIds);
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
-            }
-            catch (ApiExceptionV1 ex)
+            if (response.Result != null)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                result.Body = _mapper.Map<Watchlist>(response.Result);
+                result.Body.AssetIds.AddRange(response.Result.AssetIds);
             }
+
+            if (response.Error != null)
+            {
+                result.Error = response.Error.ToApiError();
+            }
+
+            return result;
         }
 
-        public override async Task<WatchlistResponse> UpdateWatchlist(UpdateWatchlistRequest request, ServerCallContext context)
+        public override async Task<EmptyResponse> DeleteWatchlist(DeleteWatchlistRequest request, ServerCallContext context)
         {
-            try
+            var token = context.GetBearerToken();
+            var response = await _walletApiV1Client.WatchListsDeleteAsync(request.Id, token);
+
+            var result = new EmptyResponse();
+
+            if (response.Error != null)
             {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.WatchListsUpdateAsync(
-                    request.Id,
-                    new CustomWatchListUpdateModel
-                    {
-                        Name = request.Name,
-                        Order = request.Order,
-                        AssetIds = request.AssetIds.ToList()
-                    }, token);
-
-                var result = new WatchlistResponse();
-
-                if (response.Result != null)
-                {
-                    result.Result = _mapper.Map<Watchlist>(response.Result);
-                    result.Result.AssetIds.AddRange(response.Result.AssetIds);
-                }
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
+                result.Error = response.Error.ToApiError();
             }
-            catch (ApiExceptionV1 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
 
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
-        }
-
-        public override async Task<DeleteWatchlistResponse> DeleteWatchlist(DeleteWatchlistRequest request, ServerCallContext context)
-        {
-            try
-            {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV1Client.WatchListsDeleteAsync(request.Id, token);
-
-                var result = new DeleteWatchlistResponse();
-
-                if (response.Error != null)
-                {
-                    result.Error = _mapper.Map<ErrorV1>(response.Error);
-                }
-
-                return result;
-            }
-            catch (ApiExceptionV1 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
+            return result;
         }
     }
 }

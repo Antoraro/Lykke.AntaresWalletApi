@@ -4,7 +4,6 @@ using AntaresWalletApi.Common.Domain;
 using AntaresWalletApi.Extensions;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using Lykke.ApiClients.V1;
 using Microsoft.AspNetCore.Authorization;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 
@@ -19,7 +18,10 @@ namespace AntaresWalletApi.GrpcServices
 
             var session = _sessionService.GetSession(request.SessionId);
 
-            result.Expired = session == null || session.ExpirationDate < DateTime.UtcNow;
+            result.Body = new CheckSessionResponse.Types.Body
+            {
+                Expired = session == null || session.ExpirationDate < DateTime.UtcNow
+            };
 
             return Task.FromResult(result);
         }
@@ -34,11 +36,10 @@ namespace AntaresWalletApi.GrpcServices
 
             if (session == null)
             {
-                result.Error = new ErrorV1
+                result.Error = new ErrorResponseBody
                 {
-                    Code = ErrorModelCode.InvalidInputField.ToString(),
-                    Message = ErrorMessages.InvalidFieldValue(nameof(sessionId)),
-                    Field = nameof(sessionId)
+                    Code = ErrorCode.Unauthorized,
+                    Message = ErrorMessages.InvalidToken
                 };
 
                 return result;
@@ -59,11 +60,10 @@ namespace AntaresWalletApi.GrpcServices
 
             if (session == null)
             {
-                result.Error = new ErrorV1
+                result.Error = new ErrorResponseBody
                 {
-                    Code = ErrorModelCode.InvalidInputField.ToString(),
-                    Message = ErrorMessages.InvalidFieldValue(nameof(sessionId)),
-                    Field = nameof(sessionId)
+                    Code = ErrorCode.Unauthorized,
+                    Message = ErrorMessages.InvalidToken
                 };
 
                 return result;

@@ -11,7 +11,6 @@ using Lykke.ApiClients.V2;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.CandlesHistory.Client.Models;
-using Newtonsoft.Json;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 using ApiExceptionV1 = Lykke.ApiClients.V1.ApiException;
 using ApiExceptionV2 = Lykke.ApiClients.V2.ApiException;
@@ -32,7 +31,7 @@ namespace AntaresWalletApi.GrpcServices
 
             var assets = await _assetsHelper.GetAssetsAvailableToClientAsync(clientId, partnerId, true);
 
-            result.Body = new AssetsDictionaryResponseBody();
+            result.Body = new AssetsDictionaryResponse.Types.Body();
 
             result.Body.Categories.AddRange(_mapper.Map<List<AssetCategory>>(categories));
             result.Body.Assets.AddRange(_mapper.Map<List<Asset>>(assets));
@@ -52,58 +51,47 @@ namespace AntaresWalletApi.GrpcServices
         {
             var result = new BaseAssetResponse();
 
-            try
+            var token = context.GetBearerToken();
+            var response = await _walletApiV2Client.GetBaseAssetAsync(token);
+
+            if (response != null)
             {
-                var token = context.GetBearerToken();
-                var response = await _walletApiV2Client.GetBaseAssetAsync(token);
-
-                if (response != null)
+                result.Body = new BaseAssetResponse.Types.Body
                 {
-                    result.BaseAsset = new BaseAssetResponse.Types.BaseAsset
-                    {
-                        AssetId = response.BaseAssetId
-                    };
-                }
-
-                return result;
+                    AssetId = response.BaseAssetId
+                };
             }
-            catch (ApiExceptionV2 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
 
-                if (ex.StatusCode == 400)
-                {
-                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
+            return result;
         }
 
-        public override async Task<EmptyResponseV2> SetBaseAsset(BaseAssetUpdateRequest request, ServerCallContext context)
+        public override async Task<EmptyResponse> SetBaseAsset(BaseAssetUpdateRequest request, ServerCallContext context)
         {
-            var result = new EmptyResponseV2();
+            var result = new EmptyResponse();
 
             try
             {
                 var token = context.GetBearerToken();
-                await _walletApiV2Client.SetBaseAssetAsync(new BaseAssetUpdateModel{BaseAssetId = request.BaseAssetId}, token);
+                await _walletApiV2Client.SetBaseAssetAsync(new BaseAssetUpdateModel {BaseAssetId = request.BaseAssetId},
+                    token);
                 return result;
             }
             catch (ApiExceptionV2 ex)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
-                if (ex.StatusCode == 400)
+                if (ex.StatusCode == 404)
                 {
-                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    result.Error = new ErrorResponseBody
+                    {
+                        Code = ErrorCode.InvalidField,
+                        Message = "Asset not found"
+                    };
+
+                    result.Error.Fields.Add(nameof(request.BaseAssetId), "Asset not found");
+
                     return result;
                 }
 
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                throw;
             }
         }
 
@@ -111,30 +99,15 @@ namespace AntaresWalletApi.GrpcServices
         {
             var result = new AssetPairsResponse();
 
-            try
+            var response = await _walletApiV2Client.GetAssetPairsAsync();
+
+            if (response != null)
             {
-                var response = await _walletApiV2Client.GetAssetPairsAsync();
-
-                if (response != null)
-                {
-                    result.AssetPairs.AddRange(_mapper.Map<List<AssetPair>>(response.AssetPairs));
-                }
-
-                return result;
+                result.Body = new AssetPairsResponse.Types.Body();
+                result.Body.AssetPairs.AddRange(_mapper.Map<List<AssetPair>>(response.AssetPairs));
             }
-            catch (ApiExceptionV2 ex)
-            {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
 
-                if (ex.StatusCode == 400)
-                {
-                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
-                    return result;
-                }
-
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
-            }
+            return result;
         }
 
         public override Task<PricesResponse> GetPrices(PricesRequest request, ServerCallContext context)
@@ -155,9 +128,9 @@ namespace AntaresWalletApi.GrpcServices
                     .ToList();
             }
 
-            var response = new PricesResponse();
+            var response = new PricesResponse{Body = new PricesResponse.Types.Body()};
 
-            response.Prices.AddRange(result);
+            response.Body.Prices.AddRange(result);
 
             return Task.FromResult(response);
         }
@@ -171,9 +144,9 @@ namespace AntaresWalletApi.GrpcServices
                 request.From.ToDateTime().ToUniversalTime(),
                 request.To.ToDateTime().ToUniversalTime());
 
-            var result = new CandlesResponse();
+            var result = new CandlesResponse{Body = new CandlesResponse.Types.Body()};
 
-            result.Candles.AddRange(_mapper.Map<List<Candle>>(candles.History));
+            result.Body.Candles.AddRange(_mapper.Map<List<Candle>>(candles.History));
 
             return result;
         }
@@ -183,16 +156,16 @@ namespace AntaresWalletApi.GrpcServices
             var clientId = context.GetClientId();
             var balances = await _balancesClient.GetClientBalances(clientId);
 
-            var res = new BalancesResponse();
-            res.Payload.AddRange(_mapper.Map<List<Balance>>(balances));
+            var res = new BalancesResponse{Body = new BalancesResponse.Types.Body()};
+            res.Body.Balances.AddRange(_mapper.Map<List<Balance>>(balances));
 
             return res;
         }
 
-        public override async Task<Orderbook> GetOrderbook(OrderbookRequest request, ServerCallContext context)
+        public override async Task<OrderbookResponse> GetOrderbook(OrderbookRequest request, ServerCallContext context)
         {
             var orderbook = (await _orderbooksService.GetAsync(request.AssetPairId)).FirstOrDefault();
-            return orderbook;
+            return new OrderbookResponse{Body = orderbook};
         }
 
         public override async Task<MarketsResponse> GetMarkets(MarketsRequest request, ServerCallContext context)
@@ -201,12 +174,11 @@ namespace AntaresWalletApi.GrpcServices
 
             try
             {
-                var token = context.GetBearerToken();
-
                 if (request.OptionalAssetPairIdCase == MarketsRequest.OptionalAssetPairIdOneofCase.None || string.IsNullOrEmpty(request.AssetPairId))
                 {
                     var response = await _walletApiV2Client.GetMarketsAsync();
-                    result.Markets.AddRange(_mapper.Map<List<MarketsResponse.Types.MarketModel>>(response));
+                    result.Body = new MarketsResponse.Types.Body();
+                    result.Body.Markets.AddRange(_mapper.Map<List<MarketsResponse.Types.MarketModel>>(response));
                 }
                 else
                 {
@@ -214,7 +186,8 @@ namespace AntaresWalletApi.GrpcServices
 
                     if (response != null)
                     {
-                        result.Markets.Add(_mapper.Map<MarketsResponse.Types.MarketModel>(response));
+                        result.Body = new MarketsResponse.Types.Body();
+                        result.Body.Markets.Add(_mapper.Map<MarketsResponse.Types.MarketModel>(response));
                     }
                 }
 
@@ -222,16 +195,18 @@ namespace AntaresWalletApi.GrpcServices
             }
             catch (ApiExceptionV2 ex)
             {
-                if (ex.StatusCode == 401)
-                    throw new RpcException(new Status(StatusCode.Unauthenticated, "Invalid token"));
-
                 if (ex.StatusCode == 400)
                 {
-                    result.Error = JsonConvert.DeserializeObject<ErrorV2>(ex.Response);
+                    result.Error = new ErrorResponseBody
+                    {
+                        Code = ErrorCode.NotFound,
+                        Message = ex.Response.Replace("\"", string.Empty)
+                    };
+
                     return result;
                 }
 
-                throw new RpcException(new Status(StatusCode.Unknown, ex.Message));
+                throw;
             }
         }
 
@@ -247,7 +222,8 @@ namespace AntaresWalletApi.GrpcServices
 
             var valuesInBase = await _rateCalculatorClient.FillBaseAssetDataAsync(records, request.AssetId);
 
-            result.Values.AddRange(valuesInBase.Where(x => x.AmountInBase.HasValue && x.AmountInBase.Value > 0).Select(x => new AmountInBaseAssetResponse.Types.AmountInBasePayload{AssetId = x.AssetId, AmountInBase = x.AmountInBase.Value.ToString(CultureInfo.InvariantCulture)}));
+            result.Body = new AmountInBaseAssetResponse.Types.Body();
+            result.Body.Values.AddRange(valuesInBase.Where(x => x.AmountInBase.HasValue && x.AmountInBase.Value > 0).Select(x => new AmountInBaseAssetResponse.Types.AmountInBasePayload{AssetId = x.AssetId, AmountInBase = x.AmountInBase.Value.ToString(CultureInfo.InvariantCulture)}));
 
             return result;
         }

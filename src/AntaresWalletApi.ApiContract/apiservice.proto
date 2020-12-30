@@ -13,13 +13,13 @@ service ApiService {
     // GET (v2) /api/assets/baseAsset
     rpc GetBaseAsset (google.protobuf.Empty) returns (BaseAssetResponse);
     // POST (v2) /api/assets/baseAsset
-    rpc SetBaseAsset (BaseAssetUpdateRequest) returns (EmptyResponseV2);
+    rpc SetBaseAsset (BaseAssetUpdateRequest) returns (EmptyResponse);
     // GET (v2) /api/AssetPairs
     rpc GetAssetPairs (google.protobuf.Empty) returns (AssetPairsResponse);
     rpc GetPrices (PricesRequest) returns (PricesResponse);
     rpc GetCandles (CandlesRequest) returns (CandlesResponse);
     rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
-    rpc GetOrderbook (OrderbookRequest) returns (Orderbook);
+    rpc GetOrderbook (OrderbookRequest) returns (OrderbookResponse);
     // GET (v2) /api/markets
     rpc GetMarkets (MarketsRequest) returns (MarketsResponse);
     // GET /api/Client/pendingActions
@@ -84,18 +84,18 @@ service ApiService {
     // PUT /api/WatchLists
     rpc UpdateWatchlist(UpdateWatchlistRequest) returns (WatchlistResponse);
     // DELETE /api/WatchLists
-    rpc DeleteWatchlist(DeleteWatchlistRequest) returns (DeleteWatchlistResponse);
+    rpc DeleteWatchlist(DeleteWatchlistRequest) returns (EmptyResponse);
 
     // GET /api/Tiers/Info
-    rpc GetTierInfo(google.protobuf.Empty) returns (TierInfoRespone);
+    rpc GetTierInfo(google.protobuf.Empty) returns (TierInfoResponse);
     // GET /api/PersonalData
     rpc GetPersonalData(google.protobuf.Empty) returns (PersonalDataResponse);
     // GET /api/KycProfiles/LykkeEurope/documents
     rpc GetKycDocuments(google.protobuf.Empty) returns (KycDocumentsResponse);
     // POST (v2) /api/client/address
-    rpc SetAddress(SetAddressRequest) returns (EmptyResponseV2);
+    rpc SetAddress(SetAddressRequest) returns (EmptyResponse);
     // POST (v2) /api/client/zip
-    rpc SetZip(SetZipRequest) returns (EmptyResponseV2);
+    rpc SetZip(SetZipRequest) returns (EmptyResponse);
     //POST /api/KycFiles?documentType={documentType}}&fileType=
     rpc UploadKycFile(KycFileRequest) returns (EmptyResponse);
     //GET /api/Tiers/questionnaire
@@ -496,47 +496,81 @@ enum CandleInterval {
 }
 
 message PricesResponse {
-    repeated PriceUpdate prices = 1;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated PriceUpdate prices = 1;
+    }
 }
 
 message AssetsDictionaryResponse {
     oneof result {
-        AssetsDictionaryResponseBody body = 1;
+        Body body = 1;
         ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated AssetCategory categories = 1;
+        repeated Asset assets = 2;
     }
 }
 
-message AssetsDictionaryResponseBody {
-    repeated AssetCategory categories = 1;
-    repeated Asset assets = 2;
-}
-
 message BaseAssetResponse {
-    BaseAsset baseAsset = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message BaseAsset {
+    message Body {
         string assetId = 1;
     }
 }
 
 message AssetPairsResponse {
-    repeated AssetPair assetPairs = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated AssetPair assetPairs = 1;
+    }
 }
 
 message CandlesResponse {
-    repeated Candle candles = 1;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated Candle candles = 1;
+    }
 }
 
 message BalancesResponse {
-    repeated Balance payload = 1;
-    Error3 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated Balance balances = 1;
+    }
 }
 
 message MarketsResponse {
-    repeated MarketModel markets = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated MarketModel markets = 1;
+    }
 
     message MarketModel {
         string assetPair = 1;
@@ -551,10 +585,12 @@ message MarketsResponse {
 }
 
 message PendingActionsResponse {
-    PendingActionsPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message PendingActionsPayload {
+    message Body {
         bool unsignedTxs = 1;
         bool offchainRequests = 2;
         bool needReinit = 3;
@@ -566,7 +602,14 @@ message PendingActionsResponse {
 }
 
 message AmountInBaseAssetResponse {
-    repeated AmountInBasePayload values = 1;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated AmountInBasePayload values = 1;
+    }
 
     message AmountInBasePayload {
         string assetId = 1;
@@ -575,46 +618,56 @@ message AmountInBaseAssetResponse {
 }
 
 message PushSettingsResponse {
-    PushSettingsPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message PushSettingsPayload {
+    message Body {
         bool enabled = 1;
     }
 }
 
 message RegisterPushResponse {
-    InstallationPayload result = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message InstallationPayload {
+    message Body {
         string installationId = 1;
     }
 }
 
 message VerificationEmailResponse {
-    VerificationEmailPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message VerificationEmailPayload {
+    message Body {
         string token = 1;
     }
 }
 
 message VerifyResponse {
-    VerifyPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message VerifyPayload {
+    message Body {
         bool passed = 1;
     }
 }
 
 message RegisterResponse {
-    RegisterPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message RegisterPayload {
+    message Body {
         string sessionId = 1;
         string notificationsId = 2;
         PersonalData personalData = 3;
@@ -625,52 +678,65 @@ message RegisterResponse {
 }
 
 message LoginResponse {
-    LoginPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message LoginPayload {
+    message Body {
         string sessionId = 1;
         string notificationId = 2;
     }
 }
 
 message VerifyLoginSmsResponse {
-    VerifyLoginSmsPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message VerifyLoginSmsPayload {
+    message Body {
         bool passed = 1;
     }
 }
 
 message CheckPinResponse {
-    CheckPinPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message CheckPinPayload {
+    message Body {
         bool passed = 1;
     }
 }
 
 message CheckSessionResponse {
-    bool expired = 1;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        bool expired = 1;
+    }
 }
 
 message LimitOrdersResponse {
-    OrdersPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message OrdersPayload {
+    message Body {
         repeated LimitOrderModel orders = 1;
     }
 }
 
 message PlaceOrderResponse {
-    OrderPayload result = 1;
-    ErrorV1 error = 2;
-
-    message OrderPayload {
-        OrderModel order = 1;
+    oneof result {
+        OrderModel body = 1;
+        ErrorResponseBody error = 2;
     }
 }
 
@@ -699,13 +765,25 @@ message LimitOrderModel {
 }
 
 message CancelOrderResponse {
-    bool payload = 1;
-    Error3 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        bool payload = 1;
+    }
 }
 
 message TradesResponse {
-    repeated TradeModel trades = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated TradeModel trades = 1;
+    }
 
     message TradeModel {
         string id = 1;
@@ -722,8 +800,14 @@ message TradesResponse {
 }
 
 message AssetTradesResponse {
-    repeated AssetTradeModel trades = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated AssetTradeModel trades = 1;
+    }
 
     message AssetTradeModel {
         string id = 1;
@@ -738,8 +822,14 @@ message AssetTradesResponse {
 }
 
 message FundsResponse {
-    repeated FundsModel funds = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated FundsModel funds = 1;
+    }
 
     message FundsModel {
         string id = 1;
@@ -755,8 +845,14 @@ message FundsResponse {
 }
 
 message ExplorerLinksResponse {
-    repeated ExplorerLinkModel links = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated ExplorerLinkModel links = 1;
+    }
 
     message ExplorerLinkModel {
         string url = 1;
@@ -765,8 +861,14 @@ message ExplorerLinksResponse {
 }
 
 message PublicTradesResponse {
-    repeated PublicTrade result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated PublicTrade result = 1;
+    }
 }
 
 message PublicTrade {
@@ -779,27 +881,35 @@ message PublicTrade {
 }
 
 message WatchlistsResponse {
-    repeated Watchlist result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
+        repeated Watchlist result = 1;
+    }
 }
 
 message WatchlistResponse {
-    Watchlist result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Watchlist body = 1;
+        ErrorResponseBody error = 2;
+    }
 }
 
-message DeleteWatchlistResponse {
-    ErrorV1 error = 1;
-}
-
-message TierInfoRespone {
-    TierInfoPayload result = 1;
-    ErrorV1 error = 2;
+message TierInfoResponse {
+    oneof result {
+        TierInfoPayload body = 1;
+        ErrorResponseBody error = 2;
+    }
 }
 
 message PersonalDataResponse {
-    PersonalData result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        PersonalData body = 1;
+        ErrorResponseBody error = 2;
+    }
 }
 
 message PersonalData {
@@ -815,31 +925,38 @@ message PersonalData {
 }
 
 message KycDocumentsResponse {
-    map<string, KycDocument> result = 1;
-    ErrorV1 error = 2;
-
-    message KycDocument {
-        string id = 1;
-        string type = 2;
-        string status = 3;
-        string rejectReason = 4;
-        repeated KycFile files = 5;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
     }
-
-    message KycFile {
-        string id = 1;
-        string type = 2;
-        string title = 3;
-        string contentType = 4;
-        string fileName = 5;
+    message Body {
+        map<string, KycDocument> result = 1;
     }
 }
 
-message QuestionnaireResponse {
-    QuestionnairePayload result = 1;
-    ErrorV1 error = 2;
+message KycDocument {
+    string id = 1;
+    string type = 2;
+    string status = 3;
+    string rejectReason = 4;
+    repeated KycFile files = 5;
+}
 
-    message QuestionnairePayload {
+message KycFile {
+    string id = 1;
+    string type = 2;
+    string title = 3;
+    string contentType = 4;
+    string fileName = 5;
+}
+
+message QuestionnaireResponse {
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
         repeated Question questionnaire = 1;
     }
 
@@ -866,10 +983,12 @@ message TierInfoPayload {
 }
 
 message WalletsResponse {
-    GetWalletsPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message GetWalletsPayload {
+    message Body {
         LykkeWalletsPayload lykke = 1;
         string multiSig = 2;
         string coloredMultiSig = 3;
@@ -897,10 +1016,12 @@ message WalletsResponse {
 }
 
 message WalletResponse {
-    WalletPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message WalletPayload {
+    message Body {
         string id = 1;
         string name = 2;
         string balance = 3;
@@ -916,10 +1037,12 @@ message WalletResponse {
 }
 
 message SwiftCredentialsResponse {
-    SwiftCredentials result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message SwiftCredentials {
+    message Body {
         string bic = 1;
         string accountNumber = 2;
         string accountName = 3;
@@ -931,19 +1054,24 @@ message SwiftCredentialsResponse {
 }
 
 message CountryPhoneCodesResponse {
-    CountryPhoneCodes result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message CountryPhoneCodes {
+    message Body {
         string current = 1;
         repeated Country countriesList = 2;
     }
 }
 
 message BankCardPaymentDetailsResponse {
-    BankCardPaymentDetails result = 1;
-    ErrorV1 error = 2;
-    message BankCardPaymentDetails {
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
+
+    message Body {
         double amount = 1;
         string assetId = 2;
         string walletId = 3;
@@ -962,10 +1090,12 @@ message BankCardPaymentDetailsResponse {
 }
 
 message BankCardPaymentUrlResponse {
-    BankCardPaymentUrl result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message BankCardPaymentUrl {
+    message Body {
         string url = 1;
         string okUrl = 2;
         string failUrl = 3;
@@ -975,10 +1105,12 @@ message BankCardPaymentUrlResponse {
 }
 
 message EthereumSettingsResponse {
-    EthereumSettings result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message EthereumSettings {
+    message Body {
         int32 stepsCount = 1;
         string ethAssetId = 2;
         string stepGas = 3;
@@ -996,29 +1128,35 @@ message EthereumSettingsResponse {
 }
 
 message CheckCryptoAddressResponse {
-    CheckCryptoAddressPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message CheckCryptoAddressPayload {
+    message Body {
         bool isValid = 1;
     }
 }
 
 message CryptoDepositAddressResponse {
-    CryptoDepositAddress address = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message CryptoDepositAddress {
+    message Body {
         string address = 1;
         string tag = 2;
     }
 }
 
 message WithdrawalCryptoInfoResponse {
-    WithdrawalCryptoInfo withdrawalInfo = 1;
-    ErrorV2 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message WithdrawalCryptoInfo {
+    message Body {
         string baseAddressTitle = 1;
         bool addressExtensionMandatory = 2;
         string addressExtensionTitle = 3;
@@ -1026,10 +1164,12 @@ message WithdrawalCryptoInfoResponse {
 }
 
 message SwiftCashoutInfoResponse {
-    SwiftCashoutInfo result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message SwiftCashoutInfo {
+    message Body {
         string bic = 1;
         string accNumber = 2;
         string accName = 3;
@@ -1041,20 +1181,24 @@ message SwiftCashoutInfoResponse {
     }
 }
 
-message SwiftCashoutResponse{
-    SwiftCashoutData result = 1;
-    ErrorV1 error = 2;
+message SwiftCashoutResponse {
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message SwiftCashoutData {
+    message Body {
         string transferId = 1;
     }
 }
 
 message AppSettingsResponse {
-    AppSettingsData result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message AppSettingsData {
+    message Body {
         int32 RateRefreshPeriod = 1;
         ApiAsset BaseAsset = 2;
         bool signOrder = 3;
@@ -1091,19 +1235,23 @@ message AppSettingsResponse {
 }
 
 message PrivateWalletsResponse {
-    PrivateWalletsPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message PrivateWalletsPayload {
+    message Body {
         repeated PrivateWallet wallets = 1;
     }
 }
 
 message AssetDisclaimersResponse {
-    AssetDisclaimersPayload result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message AssetDisclaimersPayload {
+    message Body {
         repeated AssetDisclaimer disclaimers = 1;
     }
 }
@@ -1142,10 +1290,12 @@ message CashOutFee {
 }
 
 message SwiftCashoutFeeResponse {
-    SwiftCashoutFee result = 1;
-    ErrorV1 error = 2;
+    oneof result {
+        Body body = 1;
+        ErrorResponseBody error = 2;
+    }
 
-    message SwiftCashoutFee {
+    message Body {
         string size = 1;
         string assetId = 2;
         string country = 3;
@@ -1241,6 +1391,13 @@ message CandleUpdate {
     google.protobuf.Timestamp updateTimestamp = 9;
 }
 
+message OrderbookResponse {
+    oneof result {
+        Orderbook body = 1;
+        ErrorResponseBody error = 2;
+    }
+}
+
 message Orderbook {
     string assetPairId = 1;
     google.protobuf.Timestamp timestamp = 2;
@@ -1280,26 +1437,7 @@ message Country {
 }
 
 message EmptyResponse {
-    ErrorV1 error = 1;
-}
-
-message EmptyResponseV2 {
-    ErrorV2 error = 1;
-}
-
-message Error3 {
-    string message = 1;
-    map<string, string> fields = 2;
-}
-
-message ErrorV1 {
-    string code = 1;
-    string field = 2;
-    string message = 3;
-    string details = 4;
-}
-
-message ErrorV2 {
-    string error = 1;
-    string message = 2;
+    oneof result {
+        ErrorResponseBody error = 1;
+    }
 }

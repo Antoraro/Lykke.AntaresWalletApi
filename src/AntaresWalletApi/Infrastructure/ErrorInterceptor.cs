@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AntaresWalletApi.Common.Domain;
 using Common;
 using Common.Log;
 using Grpc.Core;
@@ -31,10 +32,42 @@ namespace AntaresWalletApi.Infrastructure
             {
                 return await base.UnaryServerHandler(request, context, continuation);
             }
+            catch (ApiExceptionV2 ex)
+            {
+                string res;
+
+                switch (ex.StatusCode)
+                {
+                    case 401:
+                        res = new { error = new ErrorResponseBody{Code = ErrorCode.Unauthorized, Message = ErrorMessages.InvalidToken}, result = "error"}.ToJson();
+                        break;
+                    default:
+                        res = new { error = new ErrorResponseBody{Code = ErrorCode.Unknown, Message = ErrorMessages.UnknownError}, result = "error"}.ToJson();
+                        break;
+                }
+
+                return JsonConvert.DeserializeObject<TResponse>(res);
+            }
+            catch (ApiExceptionV1 ex)
+            {
+                string res;
+
+                switch (ex.StatusCode)
+                {
+                    case 401:
+                        res = new { error = new ErrorResponseBody{Code = ErrorCode.Unauthorized, Message = ErrorMessages.InvalidToken}, result = "error"}.ToJson();
+                        break;
+                    default:
+                        res = new { error = new ErrorResponseBody{Code = ErrorCode.Unknown, Message = ErrorMessages.UnknownError}, result = "error"}.ToJson();
+                        break;
+                }
+
+                return JsonConvert.DeserializeObject<TResponse>(res);
+            }
             catch (Exception ex)
             {
                 _log.Error(ex);
-                var res = new { error = new ErrorResponseBody{Code = ErrorCode.Runtime, Message = "Runtime error"}, result = "error"}.ToJson();
+                var res = new { error = new ErrorResponseBody{Code = ErrorCode.Runtime, Message = ErrorMessages.RuntimeError}, result = "error"}.ToJson();
                 return JsonConvert.DeserializeObject<TResponse>(res);
             }
         }
