@@ -63,6 +63,7 @@ service ApiService {
     rpc PlaceMarketOrder (MarketOrderRequest) returns (PlaceOrderResponse);
     rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
     rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
+    rpc EditOrder (EditOrderRequest) returns (PlaceOrderResponse);
     // GET (v2) /api/History/{walletId}/trades
     rpc GetTrades (TradesRequest) returns (TradesResponse);
     // GET (v2) /api/History/wallet/{walletId}
@@ -289,6 +290,14 @@ message CancelOrdersRequest {
 
 message CancelOrderRequest {
     string orderId = 1;
+}
+
+message EditOrderRequest {
+    string orderId = 1;
+    string assetPairId = 2;
+    string assetId = 3;
+    double volume = 4;
+    double price = 5;
 }
 
 message TradesRequest {

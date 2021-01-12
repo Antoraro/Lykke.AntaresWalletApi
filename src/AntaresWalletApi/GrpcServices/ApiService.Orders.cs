@@ -19,7 +19,6 @@ using Enum = System.Enum;
 using LimitOrderModel = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderModel;
 using LimitOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.LimitOrderRequest;
 using MarketOrderRequest = Swisschain.Lykke.AntaresWalletApi.ApiContract.MarketOrderRequest;
-using Status = Grpc.Core.Status;
 
 namespace AntaresWalletApi.GrpcServices
 {
@@ -203,13 +202,32 @@ namespace AntaresWalletApi.GrpcServices
                 };
             }
 
-            if (response.Status == MeStatusCodes.Ok)
+            if (response.Status == MeStatusCodes.Ok || response.Status == MeStatusCodes.NotFound)
                 return new CancelOrderResponse {Body = new CancelOrderResponse.Types.Body {Payload = true}};
 
             return new CancelOrderResponse
             {
-                Error = new ErrorResponseBody{Code = ErrorCode.Runtime, Message = response.Message ?? response.Status.ToString()}
+                Error = new ErrorResponseBody{Code = ErrorCode.Unknown, Message = $"ME status: {response.Status}, message: {response.Message}"}
             };
+        }
+
+        public override async Task<PlaceOrderResponse> EditOrder(EditOrderRequest request, ServerCallContext context)
+        {
+            var cancelResult = await CancelOrder(new CancelOrderRequest {OrderId = request.OrderId}, context);
+
+            if (cancelResult.ResultCase == CancelOrderResponse.ResultOneofCase.Error)
+            {
+                return new PlaceOrderResponse {Error = cancelResult.Error};
+            }
+
+            return await PlaceLimitOrder(new LimitOrderRequest
+                {
+                    AssetPairId = request.AssetPairId,
+                    AssetId = request.AssetId,
+                    Price = request.Price,
+                    Volume = request.Volume
+                },
+                context);
         }
 
         public override async Task<TradesResponse> GetTrades(TradesRequest request, ServerCallContext context)
