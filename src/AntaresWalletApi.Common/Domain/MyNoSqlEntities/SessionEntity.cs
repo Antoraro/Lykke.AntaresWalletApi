@@ -11,6 +11,7 @@ namespace AntaresWalletApi.Common.Domain.MyNoSqlEntities
         public string Token { get; set; }
         public string ClientId { get; set; }
         public string PartnerId { get; set; }
+        public string LykkeSessionId { get; set; }
         public bool Verified { get; set; }
         public bool Sms { get; set; }
         public bool Pin { get; set; }
