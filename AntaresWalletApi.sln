@@ -35,11 +35,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AntaresWalletApi.MessagingC
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github workflow", "Github workflow", "{54F26A6C-5B76-40E5-8E9C-2FA0551BC226}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\ci.yml = .github\workflows\ci.yml
+		.github\workflows\ci-dev.yml = .github\workflows\ci-dev.yml
+		.github\workflows\ci-test.yml = .github\workflows\ci-test.yml
 		.github\workflows\release-api-client.yml = .github\workflows\release-api-client.yml
 		.github\workflows\release-messaging-contract.yml = .github\workflows\release-messaging-contract.yml
 		.github\workflows\release-service.yml = .github\workflows\release-service.yml
-		.github\workflows\validate-master.yml = .github\workflows\validate-master.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{DB08FC9E-A784-4D4D-932C-DA320E3C5091}"
