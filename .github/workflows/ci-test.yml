@@ -51,10 +51,10 @@ jobs:
         env:
           KUBE_CONFIG_DATA: ${{ secrets.LYKKE_DEV_KUBE_CONFIG_DATA }}
           NAMESPACE: services
-          POD: lykke-antares-wallet-api-worker
+          POD: antares-wallet-api-worker
       - name: Restart service
         uses: swisschain/kube-restart-pods@master
         env:
           KUBE_CONFIG_DATA: ${{ secrets.LYKKE_DEV_KUBE_CONFIG_DATA }}
           NAMESPACE: services
-          POD: lykke-antares-wallet-api
+          POD: antares-wallet-api
