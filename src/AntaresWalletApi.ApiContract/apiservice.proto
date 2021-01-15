@@ -31,7 +31,7 @@ service ApiService {
     // POST	/api/PushSettings
     rpc SetPushSettings(PushSettingsRequest) returns (EmptyResponse);
     // POST (v2) /api/notifications/push
-    rpc RegisterPushNotifications(RegisterPushRequest) returns (RegisterPushResponse);
+    rpc RegisterPushNotifications(RegisterPushRequest) returns (EmptyResponse);
 
     // POST /api/Antares/email/send
     rpc SendVerificationEmail(VerificationEmailRequest) returns (VerificationEmailResponse);
@@ -189,13 +189,7 @@ message PushSettingsRequest {
 }
 
 message RegisterPushRequest {
-    MobileOsPlatform platform = 1;
-    string pushChannel = 2;
-}
-
-enum MobileOsPlatform {
-    Ios = 0;
-    Android = 1;
+    string fcmToken = 1;
 }
 
 message VerificationEmailRequest {
@@ -634,17 +628,6 @@ message PushSettingsResponse {
 
     message Body {
         bool enabled = 1;
-    }
-}
-
-message RegisterPushResponse {
-    oneof result {
-        Body body = 1;
-        ErrorResponseBody error = 2;
-    }
-
-    message Body {
-        string installationId = 1;
     }
 }
 

@@ -23,6 +23,8 @@ Services:
     settings-key: TradesAdapterServiceUrl
   RegistrationServiceUrl:
     settings-key: RegistrationServiceUrl
+  PushNotificationsServiceUrl:
+    settings-key: PushNotificationsServiceUrl
 WalletApi:
   Secret:
     settings-key: AntaresWalletApi-WalletApi-Secret

@@ -15,6 +15,7 @@ using Lykke.Service.Assets.Client;
 using Lykke.Service.Balances.Client;
 using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.PushNotifications.Client;
 using Lykke.Service.RateCalculator.Client;
 using Lykke.Service.Registration;
 using Lykke.Service.Session.Client;
@@ -194,6 +195,8 @@ namespace AntaresWalletApi.Modules
                 .WithParameter("connectionString", _config.RabbitMq.PublicTrades.ConnectionString)
                 .WithParameter("exchangeName", _config.RabbitMq.PublicTrades.ExchangeName)
                 .SingleInstance();
+
+            builder.RegisterPushNotificationsClient(_config.Services.PushNotificationsServiceUrl);
         }
     }
 }

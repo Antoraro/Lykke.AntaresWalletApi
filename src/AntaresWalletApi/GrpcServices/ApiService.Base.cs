@@ -9,6 +9,7 @@ using Lykke.Service.Assets.Client;
 using Lykke.Service.Balances.Client;
 using Lykke.Service.CandlesHistory.Client;
 using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.PushNotifications.Client;
 using Lykke.Service.RateCalculator.Client;
 using Lykke.Service.Registration;
 using Lykke.Service.TradesAdapter.Client;
@@ -37,6 +38,7 @@ namespace AntaresWalletApi.GrpcServices
         private readonly IRateCalculatorClient _rateCalculatorClient;
         private readonly ITradesAdapterClient _tradesAdapterClient;
         private readonly IRegistrationServiceClient _registrationServiceClient;
+        private readonly IPushNotificationsClient _pushNotificationsClient;
         private readonly WalletApiConfig _walletApiConfig;
         private readonly AppConfig _config;
         private readonly IMapper _mapper;
@@ -61,6 +63,7 @@ namespace AntaresWalletApi.GrpcServices
             IRateCalculatorClient rateCalculatorClient,
             ITradesAdapterClient tradesAdapterClient,
             IRegistrationServiceClient registrationServiceClient,
+            IPushNotificationsClient pushNotificationsClient,
             WalletApiConfig walletApiConfig,
             AppConfig config,
             IMapper mapper
@@ -85,6 +88,7 @@ namespace AntaresWalletApi.GrpcServices
             _rateCalculatorClient = rateCalculatorClient;
             _tradesAdapterClient = tradesAdapterClient;
             _registrationServiceClient = registrationServiceClient;
+            _pushNotificationsClient = pushNotificationsClient;
             _walletApiConfig = walletApiConfig;
             _config = config;
             _mapper = mapper;

@@ -5,6 +5,7 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Lykke.ApiClients.V1;
 using Lykke.ApiClients.V2;
+using Lykke.Service.PushNotifications.Client.Models;
 using Swisschain.Lykke.AntaresWalletApi.ApiContract;
 
 namespace AntaresWalletApi.GrpcServices
@@ -50,25 +51,23 @@ namespace AntaresWalletApi.GrpcServices
             return result;
         }
 
-        public override async Task<RegisterPushResponse> RegisterPushNotifications(RegisterPushRequest request, ServerCallContext context)
+        public override async Task<EmptyResponse> RegisterPushNotifications(RegisterPushRequest request, ServerCallContext context)
         {
-            var result = new RegisterPushResponse();
+            var result = new EmptyResponse();
 
-            var token = context.GetBearerToken();
-            var response = await _walletApiV2Client.RegisterInstallationAsync(new PushRegistrationModel
-            {
-                InstallationId = Guid.NewGuid().ToString(),
-                Platform = request.Platform == MobileOsPlatform.Ios ? PushRegistrationModelPlatform.Ios : PushRegistrationModelPlatform.Android,
-                PushChannel = request.PushChannel
-            }, token);
+            var clientId = context.GetClientId();
 
-            if (response != null)
+            var clientInfo = await _clientAccountClient.ClientAccountInformation.GetByIdAsync(clientId);
+
+            var sessionId = context.GetSessionId();
+
+            await _pushNotificationsClient.FcmTokens.RegisterAsync(new FcmTokenModel
             {
-                result.Body = new RegisterPushResponse.Types.Body
-                {
-                    InstallationId = response.InstallationId
-                };
-            }
+                NotificationId = clientInfo.NotificationsId,
+                ClientId = clientId,
+                SessionId = sessionId,
+                FcmToken = request.FcmToken
+            });
 
             return result;
         }

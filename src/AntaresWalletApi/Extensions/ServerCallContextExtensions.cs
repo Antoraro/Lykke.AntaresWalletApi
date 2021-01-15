@@ -44,5 +44,10 @@ namespace AntaresWalletApi.Extensions
         {
             return context.UserState[UserStateProperties.PartnerId]?.ToString();
         }
+
+        public static string GetSessionId(this ServerCallContext context)
+        {
+            return context.UserState[UserStateProperties.SessionId]?.ToString();
+        }
     }
 }
