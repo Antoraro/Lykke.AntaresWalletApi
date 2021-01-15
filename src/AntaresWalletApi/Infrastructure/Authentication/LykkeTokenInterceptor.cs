@@ -62,6 +62,7 @@ namespace AntaresWalletApi.Infrastructure.Authentication
             context.UserState.Add(UserStateProperties.PartnerId, session.PartnerId);
             context.UserState.Add(UserStateProperties.Token, session.Token);
             context.UserState.Add(UserStateProperties.SessionId, session.Id);
+            context.UserState.Add(UserStateProperties.LykkeSessionId, session.LykkeSessionId);
 
             return await base.UnaryServerHandler(request, context, continuation);
         }
@@ -81,5 +82,6 @@ namespace AntaresWalletApi.Infrastructure.Authentication
         public const string PartnerId = "partnerId";
         public const string Token = "token";
         public const string SessionId = "sessionId";
+        public const string LykkeSessionId = "lykkeSessionId";
     }
 }

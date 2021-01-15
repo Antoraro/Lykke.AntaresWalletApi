@@ -49,5 +49,10 @@ namespace AntaresWalletApi.Extensions
         {
             return context.UserState[UserStateProperties.SessionId]?.ToString();
         }
+
+        public static string GetLykkeSessionId(this ServerCallContext context)
+        {
+            return context.UserState[UserStateProperties.LykkeSessionId]?.ToString();
+        }
     }
 }

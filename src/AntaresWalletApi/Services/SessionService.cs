@@ -45,6 +45,7 @@ namespace AntaresWalletApi.Services
             var lykkeSession = await _clientSessionsClient.GetAsync(token);
             session.ClientId = lykkeSession.ClientId;
             session.PartnerId = lykkeSession.PartnerId;
+            session.LykkeSessionId = lykkeSession.AuthId.ToString();
 
             await _sessionsWriter.InsertOrReplaceAsync(session);
             return sessionId;
@@ -60,6 +61,7 @@ namespace AntaresWalletApi.Services
             var lykkeSession = await _clientSessionsClient.GetAsync(token);
             session.ClientId = lykkeSession.ClientId;
             session.PartnerId = lykkeSession.PartnerId;
+            session.LykkeSessionId = lykkeSession.AuthId.ToString();
 
             await _sessionsWriter.InsertOrReplaceAsync(session);
             return sessionId;

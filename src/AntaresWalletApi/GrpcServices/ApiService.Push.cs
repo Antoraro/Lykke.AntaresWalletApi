@@ -59,7 +59,7 @@ namespace AntaresWalletApi.GrpcServices
 
             var clientInfo = await _clientAccountClient.ClientAccountInformation.GetByIdAsync(clientId);
 
-            var sessionId = context.GetSessionId();
+            var sessionId = context.GetLykkeSessionId();
 
             await _pushNotificationsClient.FcmTokens.RegisterAsync(new FcmTokenModel
             {
